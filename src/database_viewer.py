@@ -27,7 +27,7 @@ print(
     pd.read_sql(
         "SELECT * FROM internships",
         conn
-    ).head()
+    )
 )
 
 conn.close()

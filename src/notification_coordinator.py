@@ -1,9 +1,9 @@
 import pandas as pd
 import os
 
-from alert_history import save_alert
 from alert_engine import create_alert
 from user_matcher import find_matching_users
+from database_alerts import save_alert
 
 
 CURRENT_FILE = "data/internships.csv"
@@ -16,26 +16,22 @@ SNAPSHOT_FILE = (
 
 def detect_new_internships():
 
+    print("Coordinator started...")
+
     current = pd.read_csv(CURRENT_FILE)
 
-    if not os.path.exists(
-        SNAPSHOT_FILE
-    ):
+    if not os.path.exists(SNAPSHOT_FILE):
 
         current.to_csv(
             SNAPSHOT_FILE,
             index=False
         )
 
-        print(
-            "Initial snapshot created."
-        )
+        print("Initial snapshot created.")
 
         return
 
-    previous = pd.read_csv(
-        SNAPSHOT_FILE
-    )
+    previous = pd.read_csv(SNAPSHOT_FILE)
 
     current_titles = set(
         current["title"]
@@ -50,23 +46,27 @@ def detect_new_internships():
         - previous_titles
     )
 
+    print("\nCURRENT TITLES:")
+    print(current_titles)
+
+    print("\nPREVIOUS TITLES:")
+    print(previous_titles)
+
+    print("\nNEW TITLES:")
+    print(new_titles)
+
     if len(new_titles) == 0:
 
-        print(
-            "No new internships."
-        )
+        print("\nNo new internships.")
 
     else:
 
-        print(
-            "\nAlerts Generated:\n"
-        )
+        print("\nAlerts Generated:\n")
 
         for internship in new_titles:
 
             row = current[
-                current["title"]
-                == internship
+                current["title"] == internship
             ].iloc[0]
 
             alert = create_alert(
@@ -83,14 +83,19 @@ def detect_new_internships():
                 )
             )
 
-            print(
-                "Matched Users:"
-            )
+            print("Matched Users:")
 
             for user in matched_users:
                 print(f"- {user}")
 
             print()
+
+            save_alert(
+                row["company"],
+                row["title"],
+                row["location"],
+                matched_users
+            )
 
     current.to_csv(
         SNAPSHOT_FILE,

@@ -41,10 +41,12 @@ def create_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS alerts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
         company TEXT,
         title TEXT,
         location TEXT,
-        matched_users TEXT
+        matched_users TEXT,
+        match_score INTEGER
     )
     """)
 
