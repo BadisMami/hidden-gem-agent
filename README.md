@@ -109,15 +109,21 @@ match inside "Microsoft").
 
 ## Environment variables
 
-SMS alerts via Twilio are optional but wired into the pipeline as of
-2026-09-17: `internship_monitor_service.py` calls `send_sms_alert()`
-every time a new internship alert is created (not just when the DB alert
-is saved). Copy `.env.example` to `.env` and set:
+SMS alerts are optional but wired into the pipeline:
+`internship_monitor_service.py` calls `send_sms_alert()` every time a new
+internship alert is created (not just when the DB alert is saved). Sending
+uses a free email-to-SMS carrier gateway (e.g. `number@tmomail.net` for
+T-Mobile) via Gmail SMTP - not a paid SMS API - since this is a
+single-user personal alert, not a product sending texts to other people.
+Copy `.env.example` to `.env` and set:
 
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_PHONE_NUMBER`
-- `NOTIFICATION_PHONE_NUMBER`
+- `EMAIL_SENDER_ADDRESS` - a Gmail address to send from
+- `EMAIL_APP_PASSWORD` - a Gmail **App Password** (not your real
+  password), generated at https://myaccount.google.com/apppasswords
+  (requires 2-Step Verification enabled first)
+- `NOTIFICATION_PHONE_NUMBER` - your phone number, digits only
+- `SMS_CARRIER_GATEWAY` - your carrier's email-to-SMS domain (`vtext.com`
+  for Verizon, `txt.att.net` for AT&T, `tmomail.net` for T-Mobile, etc.)
 
 If unset, `send_sms_alert()` prints a message and skips sending rather than
 failing - the rest of the pipeline (DB alerts, dashboard) works either way.
@@ -204,10 +210,15 @@ Best-effort fallback for everything else:
    against at least one real Lever-hosted company before enabling more.
 3. Workday support (tenant-specific, deferred until Greenhouse/Lever are
    stable).
-4. Wire `custom_monitor.py` output into a normalized-internship adapter
-   only if a company genuinely has no structured API - it currently only
-   finds navigation links, not individual postings.
-4. Per-user stored resumes so monitor-run alerts can score by skill match,
+4. The generic browser scraper (`generic_browser_monitor.py`) covers 24
+   of 59 `custom` companies as of 2026-09-17 - investigate the remaining
+   35 individually (some are DNS/timeout failures worth retrying, others
+   need a different search-trigger approach or may genuinely block
+   headless browsers).
+5. Per-user stored resumes so monitor-run alerts can score by skill match,
    not just declared interest.
-5. SMS/email notifications on new alerts (Twilio integration exists but is
-   optional and untested end-to-end due to trial-account restrictions).
+6. Set up a scheduler (Windows Task Scheduler, cron, etc.) so the monitor
+   runs periodically instead of only on manual invocation.
+7. SMS alerts are wired in via email-to-SMS gateway (see Environment
+   variables above) - untested end-to-end until `.env` has real Gmail
+   App Password + carrier gateway values filled in.
