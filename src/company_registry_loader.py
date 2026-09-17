@@ -21,6 +21,32 @@ def load_companies():
     return companies
 
 
+def load_enabled_companies():
+    """
+    Return only companies marked enabled=yes in the registry, with
+    platform/platform_identifier normalized for adapter dispatch.
+    """
+
+    companies = load_companies()
+
+    enabled = []
+
+    for company in companies:
+
+        flag = str(company.get("enabled", "")).strip().lower()
+
+        if flag != "yes":
+            continue
+
+        company["platform"] = str(
+            company.get("platform", "") or ""
+        ).strip().lower()
+
+        enabled.append(company)
+
+    return enabled
+
+
 if __name__ == "__main__":
 
     companies = load_companies()

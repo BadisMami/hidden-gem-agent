@@ -1,6 +1,24 @@
-company,industry,priority,internship_types,platform,career_url
-Target,Retail,High,SWE|Data|Cyber,Custom,https://corporate.target.com/careers
-Chipotle,Restaurant,High,SWE|Data,Custom,https://jobs.chipotle.com/internships
-Progressive,Insurance,High,SWE|ML|Data|Cloud,Custom,https://careers.progressive.com/pages/students-graduates-internships
-Hudl,Sports Tech,High,SWE|ML|Data,Custom,https://www.hudl.com/jobs/interns
-Strava,Sports Tech,High,SWE|ML|Mobile,Custom,https://www.strava.com/careers
+company,industry,priority,internship_types,platform,career_url,platform_identifier,enabled
+Target,Retail,High,SWE|Data|Cybersecurity,custom,https://corporate.target.com/careers,,yes
+Chipotle,Restaurant,High,SWE|Data,custom,https://jobs.chipotle.com/internships,,yes
+Progressive,Insurance,High,SWE|ML|Data|Cybersecurity,custom,https://careers.progressive.com/pages/students-graduates-internships,,yes
+Hudl,Sports Tech,High,SWE|ML|Data|Product,greenhouse,https://www.hudl.com/jobs/interns,hudl,yes
+Strava,Sports Tech,High,SWE|ML|Mobile,custom,https://www.strava.com/careers,,yes
+Nike,Retail,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.nike.com,,yes
+State Farm,Insurance,Medium,SWE|Data|Cybersecurity,custom,https://jobs.statefarm.com,,yes
+Garmin,Technology,Medium,SWE|Embedded|Firmware,custom,https://careers.garmin.com,,yes
+John Deere,Agriculture,Medium,SWE|Data|Embedded|Robotics,custom,https://careers.deere.com,,yes
+Cummins,Manufacturing,Medium,SWE|Data|Embedded|Firmware,custom,https://careers.cummins.com,,yes
+Caterpillar,Manufacturing,Medium,SWE|Data|Embedded|Robotics,custom,https://careers.caterpillar.com,,yes
+Delta Airlines,Transportation,Medium,SWE|Data|Cybersecurity,custom,https://careers.delta.com,,yes
+UPS,Logistics,Medium,SWE|Data|Cybersecurity,custom,https://www.jobs-ups.com,,yes
+Fidelity,Finance,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.fidelity.com,,yes
+RTX,Aerospace,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.rtx.com,,yes
+Lockheed Martin,Aerospace,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://www.lockheedmartinjobs.com,,yes
+L3Harris,Defense,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.l3harris.com,,yes
+Honeywell,Manufacturing,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.honeywell.com,,yes
+3M,Manufacturing,Medium,SWE|Data|Cybersecurity,custom,https://careers.3m.com,,yes
+Raymond James,Finance,Medium,SWE|Data|Cybersecurity,custom,https://www.raymondjames.com/careers,,yes
+Capital One,Finance,Medium,SWE|ML|Data|Cybersecurity,custom,https://www.capitalonecareers.com,,yes
+Publix,Retail,Medium,SWE|Data|Cybersecurity,custom,https://jobs.publix.com,,yes
+Best Buy,Retail,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.bestbuy.com,,yes
