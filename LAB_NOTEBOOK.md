@@ -112,3 +112,49 @@ hardcoded credentials.
 - Consider consolidating `companies.csv`/`company_database.py` (role-flag
   reference table) with `company_registry.csv` (monitoring config) if the
   duplication becomes a maintenance burden
+
+## 2026-09-17 (continued) - Jibe/SuccessFactors adapter
+
+### Completed
+- User asked for coverage beyond Hudl. Checked whether the other 22
+  registry companies had public Greenhouse or Lever boards under their
+  obvious name slugs - none did (large enterprises here mostly don't run
+  startup-style ATS boards)
+- Tested `custom_monitor.py` against real career pages (Garmin, John Deere,
+  Target, Chipotle): confirmed it only surfaces navigation/landing-page
+  links ("Internships" category page, even a false-positive marketing page
+  matching the word "student"), not individual job postings - wiring this
+  into the database as-is would have inserted misleading fake internship
+  records, so it was deliberately not connected
+- Used a real browser (network tab inspection) to find Garmin's actual
+  job-data API: `careers.garmin.com/api/jobs` - a public, unauthenticated
+  JSON endpoint from the "Jibe" / SAP SuccessFactors Recruiting Marketing
+  platform, with a genuine `tags3=Intern` server-side filter (exact
+  detection, not keyword guessing) and structured fields (req_id, title,
+  full_location, apply_url)
+- Verified the same `/api/jobs` pattern against all other `platform=custom`
+  registry companies; State Farm (`jobs.statefarm.com`) also runs Jibe and
+  returned live data (currently 0 internships posted - verified as a real
+  empty result, not a broken filter). The rest returned 403/404/302/500 -
+  not verified, left as `platform=custom`, not guessed at further
+- Built `company_monitors/jibe_monitor.py::get_jibe_internships()`,
+  wired into `internship_monitor_service.py`, added
+  `tests/test_jibe_monitor.py` (5 mocked tests)
+- Configured Garmin and State Farm as `platform=jibe` in
+  `company_registry.csv` with their real API hosts as `platform_identifier`
+- Ran the monitor live: 34 real Garmin internships inserted (9 alerts for
+  the registered SWE/ML/Embedded-interested user), State Farm correctly
+  returned 0. Re-ran to confirm idempotency: 0 new, 0 new alerts
+
+### Status
+Coverage expanded from 1 to 2 live-monitored companies (Hudl via
+Greenhouse, Garmin + State Farm via Jibe), 20 companies remain
+`platform=custom` pending individual investigation (no adapter built for
+suspected-not-yet-verified platforms).
+
+### Next Steps
+- Investigate the remaining 20 `platform=custom` companies one at a time
+  in a real browser (watch the network tab on their careers page) rather
+  than guessing - Jibe was found this way, more may be on it or on
+  Workday/iCIMS-standalone
+- Same Lever/per-user-resume/companies.csv-consolidation items as above

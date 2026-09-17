@@ -1,5 +1,6 @@
 from company_registry_loader import load_enabled_companies
 from company_monitors.greenhouse_monitor import get_greenhouse_internships
+from company_monitors.jibe_monitor import get_jibe_internships
 from database_setup import create_database
 from database_monitor import upsert_internship, create_alert_for_new_internship
 
@@ -11,6 +12,10 @@ from database_monitor import upsert_internship, create_alert_for_new_internship
 # silently miscounted as failures or successes.
 PLATFORM_ADAPTERS = {
     "greenhouse": lambda company: get_greenhouse_internships(
+        company["company"],
+        company["platform_identifier"]
+    ),
+    "jibe": lambda company: get_jibe_internships(
         company["company"],
         company["platform_identifier"]
     ),
