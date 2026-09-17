@@ -9,10 +9,11 @@ def save_alert(
     title,
     location,
     matched_users,
-    match_score
+    match_score,
+    db_path=DB_PATH
 ):
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
 
     cursor = conn.cursor()
 

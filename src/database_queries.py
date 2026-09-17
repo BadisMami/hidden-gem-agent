@@ -18,12 +18,17 @@ def get_all_users():
     return users
 
 
-def get_all_internships():
+def get_all_internships(active_only=True):
 
     conn = sqlite3.connect(DB_PATH)
 
+    query = "SELECT * FROM internships"
+
+    if active_only:
+        query += " WHERE is_active = 1"
+
     internships = pd.read_sql(
-        "SELECT * FROM internships",
+        query,
         conn
     )
 

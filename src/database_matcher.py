@@ -12,6 +12,7 @@ def find_internships(role):
     SELECT *
     FROM internships
     WHERE LOWER(role_type)=LOWER(?)
+    AND is_active = 1
     """
 
     results = pd.read_sql(
