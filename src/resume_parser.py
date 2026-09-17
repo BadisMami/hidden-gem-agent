@@ -1,7 +1,9 @@
+import os
+import tempfile
+
+import pymupdf
 from pypdf import PdfReader
-import fitz
 import easyocr
-from PIL import Image
 
 
 def extract_text(pdf_path):
@@ -48,45 +50,56 @@ def extract_text(pdf_path):
         gpu=False
     )
 
-    document = fitz.open(
+    document = pymupdf.open(
         pdf_path
     )
 
     extracted_text = ""
 
-    for page_number in range(
-        len(document)
-    ):
+    try:
 
-        page = document.load_page(
-            page_number
-        )
+        for page_number in range(
+            len(document)
+        ):
 
-        pix = page.get_pixmap(
-            matrix=fitz.Matrix(
-                2,
-                2
+            page = document.load_page(
+                page_number
             )
-        )
 
-        image_path = (
-            f"temp_page_{page_number}.png"
-        )
+            pix = page.get_pixmap(
+                matrix=pymupdf.Matrix(
+                    2,
+                    2
+                )
+            )
 
-        pix.save(
-            image_path
-        )
+            fd, image_path = tempfile.mkstemp(suffix=".png")
+            os.close(fd)
 
-        results = reader.readtext(
-            image_path,
-            detail=0,
-            paragraph=True
-        )
+            try:
 
-        extracted_text += (
-            "\n".join(results)
-            + "\n"
-        )
+                pix.save(
+                    image_path
+                )
+
+                results = reader.readtext(
+                    image_path,
+                    detail=0,
+                    paragraph=True
+                )
+
+                extracted_text += (
+                    "\n".join(results)
+                    + "\n"
+                )
+
+            finally:
+
+                os.remove(image_path)
+
+    finally:
+
+        document.close()
 
     return extracted_text
 

@@ -77,6 +77,10 @@ KNOWN_SKILLS = [
     "Git",
     "GitHub",
 
+    "ROS",
+    "Arduino",
+    "FPGA",
+
     "Machine Learning",
     "Artificial Intelligence",
     "Computer Vision",

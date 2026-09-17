@@ -1,34 +1,6 @@
 import requests
-from bs4 import BeautifulSoup
 
-
-def extract_links(html):
-
-    soup = BeautifulSoup(
-        html,
-        "html.parser"
-    )
-
-    links = []
-
-    for link in soup.find_all("a"):
-
-        text = link.get_text(
-            strip=True
-        )
-
-        href = link.get(
-            "href"
-        )
-
-        if text and href:
-
-            links.append({
-                "text": text,
-                "href": href
-            })
-
-    return links
+from html_parser import extract_links
 
 
 def check_company(company):
