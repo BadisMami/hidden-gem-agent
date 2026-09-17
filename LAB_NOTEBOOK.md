@@ -206,8 +206,7 @@ indistinguishable without per-company follow-up). SMS code path is live
 but untested end-to-end since Twilio isn't configured.
 
 ### Next Steps
-- User is setting up a Twilio account; once credentials are provided,
-  verify `send_sms_alert()` actually delivers a text end-to-end
+- ~~User is setting up a Twilio account...~~ Superseded - see next entry.
 - Investigate the ~35 zero-result `custom` companies individually if
   broader coverage matters more than effort saved - the generic scraper
   found real data for a wide platform variety already, so remaining
@@ -218,3 +217,40 @@ but untested end-to-end since Twilio isn't configured.
   held at this scale (verified previously only for the native-adapter
   subset)
 - Same Lever/per-user-resume/companies.csv-consolidation items as above
+
+## 2026-09-17 (continued) - SMS alerts working end-to-end
+
+### Completed
+- User asked whether Twilio was actually the right tool for a
+  single-user personal SMS alert vs. sending to other people at scale.
+  Recommended a free email-to-SMS carrier gateway instead (no
+  third-party account/billing beyond Gmail, which the user already has)
+- Rewrote `sms_alerts.py::send_sms_alert()` to send via Gmail SMTP to
+  `{phone}@{carrier_gateway}` instead of the Twilio REST API - same
+  function signature, so the wiring into `internship_monitor_service.py`
+  from the previous entry needed no changes
+- Removed the now-unused `twilio` package from `requirements.txt`
+- Added `tests/test_sms_alerts.py` (4 mocked tests: missing config,
+  partial config, successful send, SMTP failure handled gracefully)
+- User created `.env` themselves (guided through the Windows File
+  Explorer dotfile gotcha - had to use `copy .env.example .env` in
+  PowerShell rather than File Explorer, which refuses to save a
+  filename with no name before the extension) with their real Gmail
+  address, a Gmail App Password (not their login password), phone
+  number, and `tmomail.net` (T-Mobile) as the carrier gateway
+- Ran `python src/sms_alerts.py` for a real end-to-end test - **user
+  confirmed receiving the actual text on their phone**
+
+### Status
+**The full alert pipeline is now confirmed working end-to-end**: a new
+internship discovered by the monitor -> DB alert created -> real SMS
+sent -> arrives on the user's phone. This was the original goal stated
+early in the session. Verified for any of the 30 companies with live
+discovery coverage.
+
+### Next Steps
+- Set up a scheduler (Windows Task Scheduler) so this runs periodically
+  without the user manually invoking it each time
+- Investigate the ~35 zero-result `custom` companies if broader coverage
+  is wanted
+- Re-verify idempotency at full 65-company scale with a second full run

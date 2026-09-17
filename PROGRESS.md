@@ -5,7 +5,30 @@ tested - nothing is left half-edited. This file describes what's done,
 what's built but not wired in yet, and what was actively being
 investigated when work stopped.
 
-## 2026-09-17 (latest): generic browser scraper + all adapters wired in
+## 2026-09-17 (latest): SMS alerts confirmed working end-to-end
+
+Switched `sms_alerts.py` from Twilio to a free email-to-SMS carrier
+gateway (user's own call, after asking whether Twilio was the right tool
+for a single-user personal alert - it wasn't, Twilio is built for
+sending to other people at scale). User set up a Gmail App Password,
+created `.env` with `EMAIL_SENDER_ADDRESS` / `EMAIL_APP_PASSWORD` /
+`NOTIFICATION_PHONE_NUMBER` / `SMS_CARRIER_GATEWAY` (T-Mobile,
+`tmomail.net`), and confirmed receiving a real test text sent via
+`python src/sms_alerts.py`.
+
+**The full pipeline is now confirmed live end-to-end**: monitor run finds
+a new internship -> DB alert created -> `send_sms_alert()` fires -> real
+text arrives on the user's phone. This was the original ask from earlier
+in the session ("get texts when an internship position opens") and it
+now genuinely works, for any of the 30 companies with live discovery
+coverage (6 structured-API companies + 24 via the generic browser
+scraper - see the entry below for the breakdown).
+
+Nothing left to wire here. Remaining gaps are coverage (35 companies
+still return 0 from the generic scraper) and automation (no scheduler
+exists yet - the monitor only runs when manually invoked).
+
+## 2026-09-17: generic browser scraper + all adapters wired in
 
 User asked to make alerts happen for as many registry companies as
 possible, "any way possible." Rather than continuing to reverse-engineer
