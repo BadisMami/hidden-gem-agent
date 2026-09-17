@@ -27,6 +27,29 @@ One incidental lead worth chasing next: **Eaton's career site
 already cracked for John Deere. Once Eightfold is wired in (see below),
 Eaton should be nearly free to add too.
 
+## 2026-09-17 update: added 17 defense contractors (big/medium/small)
+
+User asked specifically for defense companies across all size tiers.
+Added, all `platform=custom` with sourced real career URLs, same caveat
+as above (in the registry, not yet actively monitored):
+
+- **Big/prime contractors** (priority=High): Northrop Grumman, General
+  Dynamics, BAE Systems Inc, Huntington Ingalls Industries
+- **Mid-size**: Leidos, Booz Allen Hamilton, SAIC, CACI International,
+  Textron Systems, Leonardo DRS, Kratos Defense, Mercury Systems
+- **Smaller / specialized**: ManTech, Parsons Corporation, Peraton, MITRE
+  Corporation (FFRDC, not-for-profit), Johns Hopkins Applied Physics
+  Laboratory (JHU APL, university-affiliated lab)
+
+Note: search results mentioned Northrop Grumman's application portal
+(`jobs.northropgrumman.com`) is Workday-based - worth checking first if
+anyone builds a generic Workday adapter, since Workday support is on the
+broader roadmap.
+
+Registry is now 65 companies total (was 23 at the start of today).
+CSV validated (no nulls), all 39 tests pass, and a live monitor run
+completes cleanly (3 successful / 0 failed / 62 skipped as expected).
+
 ## What's live and working (wired into the registry + monitor service)
 
 Run `python src/internship_monitor_service.py` to pull all of these:
