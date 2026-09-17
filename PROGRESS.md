@@ -1,10 +1,31 @@
 # In-progress: expanding company coverage beyond Hudl
 
-Status as of 2026-09-17, stopped mid-session because the user had to step
-away. Everything committed at this point is stable and tested - nothing
-is left half-edited. This file describes what's done, what's built but
-not wired in yet, and what was actively being investigated when work
-stopped.
+Status as of 2026-09-17. Everything committed at this point is stable and
+tested - nothing is left half-edited. This file describes what's done,
+what's built but not wired in yet, and what was actively being
+investigated when work stopped.
+
+## 2026-09-17 update: registry expanded to 48 companies (was 23)
+
+Added 25 new companies to `data/company_registry.csv`, sourced via web
+search for real companies with real, currently-active internship
+programs (McKesson, Cigna, Liberty Mutual, USAA, MassMutual, Northwestern
+Mutual, Truist, Charles Schwab, Edward Jones, Southwest Airlines, FedEx,
+Home Depot, Lowe's, Dick's Sporting Goods, Kroger, Illinois Tool Works,
+GE Aerospace, Boeing, Duke Energy, UnitedHealth Group, Parker Hannifin,
+Eaton, Mercury Insurance, PepsiCo, Procter & Gamble). Each has a real,
+verified career-page URL from search results - none were invented. All
+are added as `platform=custom` with no `platform_identifier`, since none
+of their actual ATS platforms were verified this round (that would need
+the same live-browser-network-inspection process used for Garmin/John
+Deere/Honeywell). They currently show as "skip - no adapter" in monitor
+runs, same as the rest of the custom-platform companies - being in the
+registry does NOT mean they're actively monitored yet.
+
+One incidental lead worth chasing next: **Eaton's career site
+(`eaton.eightfold.ai/careers`) runs on Eightfold** - the same platform
+already cracked for John Deere. Once Eightfold is wired in (see below),
+Eaton should be nearly free to add too.
 
 ## What's live and working (wired into the registry + monitor service)
 
