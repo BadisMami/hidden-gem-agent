@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 from datetime import date
 
 import requests
@@ -9,6 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from role_classifier import classify_role
 from url_utils import clean_url
+
+_INTERN_WORD_RE = re.compile(r"\bintern(ship)?s?\b", re.IGNORECASE)
 
 
 def get_greenhouse_internships(company_name, board_name):
@@ -63,8 +66,8 @@ def get_greenhouse_internships(company_name, board_name):
                 employment_type = str(meta.get("value") or "").lower()
 
         is_internship = (
-            "intern" in title.lower()
-            or "intern" in employment_type
+            _INTERN_WORD_RE.search(title) is not None
+            or _INTERN_WORD_RE.search(employment_type) is not None
         )
 
         if not is_internship:

@@ -63,8 +63,34 @@ FIXTURE_JOBS = {
             ),
             "metadata": [],
         },
+        {
+            # "Internal" contains "intern" as a substring - must not be
+            # mistaken for an internship.
+            "id": 1005,
+            "title": "Internal Auditor",
+            "location": {"name": "Lincoln, NE"},
+            "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/1005",
+            "metadata": [
+                {"name": "Employment Type", "value": "Full-Time"}
+            ],
+        },
     ]
 }
+
+
+def test_internal_role_not_mistaken_for_internship(monkeypatch):
+
+    monkeypatch.setattr(
+        greenhouse_monitor.requests,
+        "get",
+        lambda url, timeout: FakeResponse(FIXTURE_JOBS)
+    )
+
+    results = greenhouse_monitor.get_greenhouse_internships("Acme", "acme")
+
+    titles = {r["title"] for r in results}
+
+    assert "Internal Auditor" not in titles
 
 
 def test_filters_by_title_and_metadata(monkeypatch):
