@@ -159,14 +159,7 @@ def _extract_links(page):
     return [(item["text"], item["href"]) for item in raw]
 
 
-def _scrape_company_page(page, company_name, career_url):
-
-    _goto_with_retries(page, career_url)
-    page.wait_for_timeout(3000)
-
-    _try_search_for_interns(page)
-
-    links = _extract_links(page)
+def _internships_from_links(links, company_name):
 
     internships = []
     seen = set()
@@ -198,6 +191,30 @@ def _scrape_company_page(page, company_name, career_url):
             "source_platform": "custom-browser",
             "date_discovered": date.today().isoformat(),
         })
+
+    return internships
+
+
+def _scrape_company_page(page, company_name, career_url):
+
+    _goto_with_retries(page, career_url)
+    page.wait_for_timeout(3000)
+
+    # Try the page as-loaded first - some career_urls are already a
+    # pre-filtered internship listing (e.g. Boeing's /category/
+    # internship-jobs/... page), and running the search-box flow on a
+    # page like that can navigate away and lose results that were
+    # already there, rather than add to them.
+    internships = _internships_from_links(_extract_links(page), company_name)
+
+    if internships:
+        return internships
+
+    if _try_search_for_interns(page):
+
+        internships = _internships_from_links(
+            _extract_links(page), company_name
+        )
 
     return internships
 

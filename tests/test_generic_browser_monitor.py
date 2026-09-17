@@ -101,3 +101,85 @@ def test_scrape_company_page_filters_and_dedupes(monkeypatch):
         assert r["source_platform"] == "custom-browser"
         assert r["location"] == "Unknown"
         assert r["external_job_id"] is None
+
+
+def test_search_skipped_when_page_already_has_results(monkeypatch):
+    """
+    Regression test: found via Boeing's real career page, which is
+    already a pre-filtered internship listing. The old code always ran
+    the search-box flow regardless, which could navigate away and lose
+    results that were already on the page. Search should only be
+    attempted when the initial extraction finds nothing.
+    """
+
+    class FakePage:
+
+        def wait_for_timeout(self, ms):
+            pass
+
+    def fake_goto(page, url, **kwargs):
+        pass
+
+    def fake_search(page):
+        raise AssertionError(
+            "search should not be attempted when the page already has "
+            "results"
+        )
+
+    def fake_extract(page):
+        return [
+            (
+                "Software Engineering Intern",
+                "https://careers.acme.com/job/1001/swe-intern"
+            ),
+        ]
+
+    monkeypatch.setattr(gbm, "_goto_with_retries", fake_goto)
+    monkeypatch.setattr(gbm, "_try_search_for_interns", fake_search)
+    monkeypatch.setattr(gbm, "_extract_links", fake_extract)
+
+    results = gbm._scrape_company_page(
+        FakePage(), "Acme", "https://careers.acme.com"
+    )
+
+    assert len(results) == 1
+
+
+def test_search_attempted_when_no_initial_results(monkeypatch):
+
+    class FakePage:
+
+        def wait_for_timeout(self, ms):
+            pass
+
+    def fake_goto(page, url, **kwargs):
+        pass
+
+    calls = {"search_called": False, "extract_calls": 0}
+
+    def fake_search(page):
+        calls["search_called"] = True
+        return True
+
+    def fake_extract(page):
+        calls["extract_calls"] += 1
+        if calls["extract_calls"] == 1:
+            return []
+        return [
+            (
+                "Data Science Intern",
+                "https://careers.acme.com/job/1003/data-science-intern"
+            ),
+        ]
+
+    monkeypatch.setattr(gbm, "_goto_with_retries", fake_goto)
+    monkeypatch.setattr(gbm, "_try_search_for_interns", fake_search)
+    monkeypatch.setattr(gbm, "_extract_links", fake_extract)
+
+    results = gbm._scrape_company_page(
+        FakePage(), "Acme", "https://careers.acme.com"
+    )
+
+    assert calls["search_called"] is True
+    assert len(results) == 1
+    assert results[0]["title"] == "Data Science Intern"

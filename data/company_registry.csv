@@ -8,16 +8,16 @@ Nike,Retail,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.nike.com,,yes
 State Farm,Insurance,Medium,SWE|Data|Cybersecurity,jibe,https://jobs.statefarm.com,jobs.statefarm.com,yes
 Garmin,Technology,Medium,SWE|Embedded|Firmware,jibe,https://careers.garmin.com,careers.garmin.com,yes
 John Deere,Agriculture,Medium,SWE|Data|Embedded|Robotics,eightfold,https://careers.deere.com,careers.deere.com|johndeere.com,yes
-Cummins,Manufacturing,Medium,SWE|Data|Embedded|Firmware,custom,https://careers.cummins.com,,yes
+Cummins,Manufacturing,Medium,SWE|Data|Embedded|Firmware,custom,https://cummins.jobs/career-path/internships/jobs/,,yes
 Caterpillar,Manufacturing,Medium,SWE|Data|Embedded|Robotics,custom,https://careers.caterpillar.com,,yes
-Delta Airlines,Transportation,Medium,SWE|Data|Cybersecurity,custom,https://careers.delta.com,,yes
+Delta Airlines,Transportation,Medium,SWE|Data|Cybersecurity,custom,https://www.delta.com/us/en/careers/students-and-early-careers,,yes
 UPS,Logistics,Medium,SWE|Data|Cybersecurity,custom,https://www.jobs-ups.com,,yes
 Fidelity,Finance,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.fidelity.com,,yes
 RTX,Aerospace,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.rtx.com,,yes
-Lockheed Martin,Aerospace,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://www.lockheedmartinjobs.com,,yes
+Lockheed Martin,Aerospace,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,eightfold,https://www.lockheedmartin.com/en-us/careers/index.html,lockheedmartin.eightfold.ai|lockheedmartin.com,yes
 L3Harris,Defense,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.l3harris.com,,yes
 Honeywell,Manufacturing,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,oracle_orc,https://careers.honeywell.com,careers.honeywell.com|ibqbjb.fa.ocs.oraclecloud.com|CX_1|Honeywell,yes
-3M,Manufacturing,Medium,SWE|Data|Cybersecurity,custom,https://careers.3m.com,,yes
+3M,Manufacturing,Medium,SWE|Data|Cybersecurity,custom,https://3m.wd1.myworkdayjobs.com/en/Search,,yes
 Raymond James,Finance,Medium,SWE|Data|Cybersecurity,custom,https://www.raymondjames.com/careers,,yes
 Capital One,Finance,Medium,SWE|ML|Data|Cybersecurity,custom,https://www.capitalonecareers.com,,yes
 Publix,Retail,Medium,SWE|Data|Cybersecurity,custom,https://jobs.publix.com,,yes
@@ -32,15 +32,15 @@ Truist,Banking,Medium,SWE|Data|Cybersecurity,custom,https://careers.truist.com/u
 Charles Schwab,Finance,Medium,SWE|Data,custom,https://www.schwabjobs.com/internship-academy,,yes
 Edward Jones,Finance,Medium,SWE,custom,https://www.edwardjones.com/us-en/about-us/careers,,yes
 Southwest Airlines,Airlines,Medium,SWE|Data,custom,https://careers.southwestair.com/us/en/programs,,yes
-FedEx,Logistics,Medium,SWE|Data,custom,https://careers.fedex.com/career-areas/student-programs/,,yes
+FedEx,Logistics,Medium,SWE|Data,custom,https://careers.fedex.com/career-areas/student-programs/jobs,,yes
 Home Depot,Retail,Medium,SWE|Data|ML,custom,https://careers.homedepot.com/student-internships/,,yes
 Lowe's,Retail,Medium,SWE|Data,custom,https://talent.lowes.com/us/en/internships,,yes
 Dick's Sporting Goods,Retail,Medium,SWE|Cybersecurity|Data,custom,https://www.dickssportinggoods.jobs/students-grads/,,yes
 Kroger,Retail/Grocery,Medium,SWE|Data,custom,https://www.krogerfamilycareers.com/en/sites/CX_2001/pages/5015,,yes
 Illinois Tool Works,Manufacturing,Medium,SWE|Embedded,custom,https://jobs.itw.com,,yes
 GE Aerospace,Aerospace,Medium,SWE|Embedded|Firmware,custom,https://careers.geaerospace.com/global/en/us-internships,,yes
-Boeing,Aerospace,Medium,SWE|Embedded|Data,custom,https://jobs.boeing.com/internships,,yes
-Duke Energy,Energy/Utilities,Medium,SWE|Data|Cybersecurity,custom,https://www.duke-energy.com/our-company/careers,,yes
+Boeing,Aerospace,Medium,SWE|Embedded|Data,custom,https://jobs.boeing.com/category/internship-jobs/185/9287/1,,yes
+Duke Energy,Energy/Utilities,Medium,SWE|Data|Cybersecurity,custom,https://dukeenergy.wd1.myworkdayjobs.com/search,,yes
 UnitedHealth Group,Healthcare,Medium,SWE|Data|ML,custom,https://www.unitedhealthgroup.com/careers,,yes
 Parker Hannifin,Manufacturing,Medium,SWE|Embedded|Data,custom,https://www.parker.com/us/en/careers/internships.html,,yes
 Eaton,Manufacturing,Medium,SWE|Embedded|Data,eightfold,https://www.eaton.com/us/en-us/company/careers/university-students.html,eaton.eightfold.ai|eaton.com,yes
@@ -52,9 +52,9 @@ General Dynamics,Defense,High,SWE|Cybersecurity|Embedded,custom,https://www.gd.c
 BAE Systems Inc,Defense,High,SWE|Cybersecurity|Embedded|Data,custom,https://jobs.baesystems.com/global/en/leap,,yes
 Huntington Ingalls Industries,Defense,High,SWE|Cybersecurity|Data,custom,https://www.hii.com/careers/students,,yes
 Leidos,Defense,Medium,SWE|ML|Data|Cybersecurity,custom,https://careers.leidos.com/pages/intern-jobs,,yes
-Booz Allen Hamilton,Defense,Medium,SWE|Data|Cybersecurity,custom,https://www.boozallen.com/careers/university-talent/booz-allen-summer-games.html,,yes
+Booz Allen Hamilton,Defense,Medium,SWE|Data|Cybersecurity,custom,https://careers.boozallen.com/jobs/search,,yes
 SAIC,Defense,Medium,SWE|Data|Cybersecurity,custom,https://jobs.saic.com/pages/early-career,,yes
-CACI International,Defense,Medium,SWE|Data|Cybersecurity,custom,https://careers.caci.com/global/en/early-career-internships,,yes
+CACI International,Defense,Medium,SWE|Data|Cybersecurity,eightfold,https://careers.caci.com/global/en/early-career-internships,caci.eightfold.ai|caci.com,yes
 Textron Systems,Defense,Medium,SWE|Embedded|Robotics,custom,https://www.textronsystems.com/careers/student-candidates,,yes
 Leonardo DRS,Defense,Medium,SWE|Embedded|Firmware,custom,https://careers.leonardodrs.com/go/Internships/9729000/,,yes
 Kratos Defense,Defense,Medium,SWE|Cybersecurity|Embedded,custom,https://www.kratosdefense.com/careers/open-roles,,yes
