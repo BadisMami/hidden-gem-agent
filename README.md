@@ -46,7 +46,13 @@ lookup and are not part of the live-monitoring pipeline.
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
+playwright install chromium
 ```
+
+The `playwright install chromium` step is required - it downloads a
+headless browser used by `company_monitors/generic_browser_monitor.py`
+to render JS-heavy career sites that a plain HTTP request can't see
+through (most `platform=custom` companies fall into this category).
 
 Copy `.env.example` to `.env` if you want SMS alerts (optional, see below).
 
@@ -103,41 +109,76 @@ match inside "Microsoft").
 
 ## Environment variables
 
-SMS alerts via Twilio are optional. Copy `.env.example` to `.env` and set:
+SMS alerts via Twilio are optional but wired into the pipeline as of
+2026-09-17: `internship_monitor_service.py` calls `send_sms_alert()`
+every time a new internship alert is created (not just when the DB alert
+is saved). Copy `.env.example` to `.env` and set:
 
 - `TWILIO_ACCOUNT_SID`
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_PHONE_NUMBER`
 - `NOTIFICATION_PHONE_NUMBER`
 
-If unset, `src/sms_alerts.py` prints a message and skips sending rather than
-failing. `.env` is gitignored — never commit real credentials.
+If unset, `send_sms_alert()` prints a message and skips sending rather than
+failing - the rest of the pipeline (DB alerts, dashboard) works either way.
+`.env` is gitignored — never commit real credentials.
 
 ## Supported platforms
 
-- **Greenhouse** — fully generic (`get_greenhouse_internships(company_name,
-  board_name)`), verified live against Hudl's public job board API.
-- **Jibe / SAP SuccessFactors Recruiting Marketing** — fully generic
-  (`get_jibe_internships(company_name, api_host)`), verified live against
-  Garmin (`careers.garmin.com`, 34 live internships as of 2026-09-17) and
-  State Farm (`jobs.statefarm.com`). This platform exposes a genuine
-  `tags3=Intern` server-side filter, so detection is exact rather than
-  keyword-guessed. Many large non-tech enterprises run career sites on
-  this platform under a `careers.<company>.com` or `jobs.<company>.com`
-  domain with a public `/api/jobs` endpoint - worth checking for any new
-  hidden-gem company before assuming a custom scraper is needed.
-- **Custom company career pages** — a best-effort link-scraper
-  (`company_monitors/custom_monitor.py`) exists but is not yet wired into
-  the monitor service's SQLite pipeline (it returns raw scraped links, not
-  normalized internship records - verified against real sites, it mostly
-  finds navigation/landing-page links rather than individual job postings,
-  since most of these sites are JS-rendered SPAs a plain HTTP fetch can't
-  see through). Companies on `platform=custom` are reported as "skipped
-  (no adapter)" in the monitor summary rather than fed misleading data.
+Structured, high-accuracy adapters (real title/location/apply-link fields
+from the platform's own API):
+
+- **Greenhouse** — `get_greenhouse_internships(company_name, board_name)`.
+  Verified live against Hudl.
+- **Jibe / SAP SuccessFactors Recruiting Marketing** —
+  `get_jibe_internships(company_name, api_host)`. Verified live against
+  Garmin and State Farm. Exposes a genuine `tags3=Intern` server-side
+  filter, so detection is exact rather than keyword-guessed.
+- **Eightfold.ai** — `get_eightfold_internships(company_name, api_host,
+  company_domain)`. Verified live against John Deere and Eaton. Search is
+  keyword-only (no structured intern filter), so results are re-filtered
+  client-side with a word-boundary regex to drop false positives like
+  "Internal Auditor".
+- **Oracle Recruiting Cloud (Fusion HCM)** —
+  `get_oracle_orc_internships(company_name, career_site_host, tenant_host,
+  site_number, site_name)`. Verified live against Honeywell (30 real
+  internships). Same keyword-only caveat as Eightfold.
+
+Best-effort fallback for everything else:
+
+- **`platform=custom`** (59 of the 65 registry companies) —
+  `company_monitors/generic_browser_monitor.py::get_browser_scraped_internships()`
+  uses a real headless browser (Playwright/Chromium) to render the career
+  page's JS, attempts a job-search-box submission if one exists, then
+  extracts links whose text contains "intern"/"internship" as a whole
+  word, isn't a generic nav label ("Internships", "Search Jobs", etc.),
+  and points at what looks like an actual job-detail URL (contains a
+  4+ digit id). This is what makes "any" custom career page possible to
+  monitor at all without hand-building an adapter per company - a plain
+  HTTP request can't see through most of these sites' JS rendering.
+
+  **Real result from a full run across all 65 registry companies
+  (2026-09-17): 24 of 59 `custom` companies produced real internship
+  data - 154 postings total** (Caterpillar: 20, Leonardo DRS: 17,
+  McKesson: 15, L3Harris: 15, RTX: 10, PepsiCo: 10, and 18 more with
+  smaller counts). Notably this succeeded for RTX and Caterpillar, both
+  "Phenom People"-platform sites where direct API reverse-engineering had
+  stalled earlier - the browser fallback found real postings anyway.
+  The other 35 `custom` companies returned 0 (either no search box was
+  found/triggered, the site blocks headless browsers, or they may simply
+  have no current internships posted).
+
+  **Known limitations of this fallback**: location is always "Unknown"
+  (link text alone doesn't reliably contain it); `application_url` quality
+  depends on whether the site's link href points at the specific posting
+  (usually does) vs. a search-results page; it can't handle career pages
+  needing more than one search-box interaction to reach real listings.
+
 - **Lever, Workday** — planned, not yet implemented (`lever_monitor.py`,
-  `workday_monitor.py` are empty stubs). None of the registry's remaining
+  `workday_monitor.py` are empty stubs). None of the registry's
   `platform=custom` companies were found on public Greenhouse or Lever
-  boards when checked (2026-09-17).
+  boards when checked (2026-09-17) - if a new company should be added,
+  check there before assuming it needs the generic scraper.
 
 ## Limitations
 

@@ -1,25 +1,79 @@
 from company_registry_loader import load_enabled_companies
 from company_monitors.greenhouse_monitor import get_greenhouse_internships
 from company_monitors.jibe_monitor import get_jibe_internships
+from company_monitors.eightfold_monitor import get_eightfold_internships
+from company_monitors.oracle_orc_monitor import get_oracle_orc_internships
+from company_monitors.generic_browser_monitor import get_browser_scraped_internships
 from database_setup import create_database
 from database_monitor import upsert_internship, create_alert_for_new_internship
+from sms_alerts import send_sms_alert
+
+
+def _eightfold_adapter(company):
+
+    api_host, company_domain = company["platform_identifier"].split("|")
+
+    return get_eightfold_internships(
+        company["company"], api_host, company_domain
+    )
+
+
+def _oracle_orc_adapter(company):
+
+    career_site_host, tenant_host, site_number, site_name = (
+        company["platform_identifier"].split("|")
+    )
+
+    return get_oracle_orc_internships(
+        company["company"],
+        career_site_host,
+        tenant_host,
+        site_number,
+        site_name
+    )
+
+
+def _make_custom_adapter(browser):
+    """
+    "custom" platform companies have no known structured API. Falls back
+    to a real (shared, headless) browser scraping career_url directly -
+    best-effort, since these sites vary wildly and some actively resist
+    automated browsing. Companies with a verified platform (greenhouse,
+    jibe, eightfold, oracle_orc) always use their dedicated adapter
+    instead, since it's far more accurate.
+    """
+
+    def adapter(company):
+
+        return get_browser_scraped_internships(
+            company["company"],
+            company["career_url"],
+            browser=browser
+        )
+
+    return adapter
+
 
 # Platforms with a normalized adapter that returns internship dicts ready
-# for direct SQLite insertion. Other platforms (e.g. "custom") are listed
-# in the registry for future company-page monitoring, but custom_monitor
-# only returns raw scraped links today, not structured internship
-# records - so those companies are reported as skipped rather than
-# silently miscounted as failures or successes.
-PLATFORM_ADAPTERS = {
-    "greenhouse": lambda company: get_greenhouse_internships(
-        company["company"],
-        company["platform_identifier"]
-    ),
-    "jibe": lambda company: get_jibe_internships(
-        company["company"],
-        company["platform_identifier"]
-    ),
-}
+# for direct SQLite insertion. "custom" uses a generic browser-based
+# fallback (see _make_custom_adapter) rather than a per-platform API,
+# since most of those companies' actual ATS hasn't been individually
+# verified yet.
+def _build_platform_adapters(browser):
+
+    return {
+        "greenhouse": lambda company: get_greenhouse_internships(
+            company["company"],
+            company["platform_identifier"]
+        ),
+        "jibe": lambda company: get_jibe_internships(
+            company["company"],
+            company["platform_identifier"]
+        ),
+        "eightfold": _eightfold_adapter,
+        "oracle_orc": _oracle_orc_adapter,
+        "custom": _make_custom_adapter(browser),
+    }
 
 
 def run_monitor():
@@ -38,14 +92,49 @@ def run_monitor():
         "new_internships_inserted": 0,
         "existing_internships_skipped": 0,
         "alerts_created": 0,
+        "sms_sent": 0,
     }
+
+    needs_browser = any(
+        c.get("platform") == "custom" for c in companies
+    )
+
+    if needs_browser:
+
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+
+            browser = p.chromium.launch(
+                headless=True, args=["--disable-http2"]
+            )
+
+            try:
+                _run_all_companies(
+                    companies, _build_platform_adapters(browser), summary
+                )
+            finally:
+                browser.close()
+
+    else:
+
+        _run_all_companies(
+            companies, _build_platform_adapters(None), summary
+        )
+
+    print_summary(summary)
+
+    return summary
+
+
+def _run_all_companies(companies, adapters, summary):
 
     for company in companies:
 
         name = company.get("company", "Unknown")
         platform = company.get("platform", "")
 
-        adapter = PLATFORM_ADAPTERS.get(platform)
+        adapter = adapters.get(platform)
 
         if adapter is None:
 
@@ -95,15 +184,22 @@ def run_monitor():
                 )
 
                 if alert:
+
                     summary["alerts_created"] += 1
+
+                    sms_body = (
+                        f"New internship: {internship['company']} - "
+                        f"{internship['title']} "
+                        f"({internship.get('location', 'Unknown')})\n"
+                        f"{internship.get('application_url', '')}"
+                    )
+
+                    if send_sms_alert(sms_body):
+                        summary["sms_sent"] += 1
 
             else:
 
                 summary["existing_internships_skipped"] += 1
-
-    print_summary(summary)
-
-    return summary
 
 
 def print_summary(summary):
@@ -122,6 +218,7 @@ def print_summary(summary):
         f"{summary['existing_internships_skipped']}"
     )
     print(f"Alerts created: {summary['alerts_created']}")
+    print(f"SMS sent: {summary['sms_sent']}")
 
 
 if __name__ == "__main__":

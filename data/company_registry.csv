@@ -7,7 +7,7 @@ Strava,Sports Tech,High,SWE|ML|Mobile,custom,https://www.strava.com/careers,,yes
 Nike,Retail,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.nike.com,,yes
 State Farm,Insurance,Medium,SWE|Data|Cybersecurity,jibe,https://jobs.statefarm.com,jobs.statefarm.com,yes
 Garmin,Technology,Medium,SWE|Embedded|Firmware,jibe,https://careers.garmin.com,careers.garmin.com,yes
-John Deere,Agriculture,Medium,SWE|Data|Embedded|Robotics,custom,https://careers.deere.com,,yes
+John Deere,Agriculture,Medium,SWE|Data|Embedded|Robotics,eightfold,https://careers.deere.com,careers.deere.com|johndeere.com,yes
 Cummins,Manufacturing,Medium,SWE|Data|Embedded|Firmware,custom,https://careers.cummins.com,,yes
 Caterpillar,Manufacturing,Medium,SWE|Data|Embedded|Robotics,custom,https://careers.caterpillar.com,,yes
 Delta Airlines,Transportation,Medium,SWE|Data|Cybersecurity,custom,https://careers.delta.com,,yes
@@ -16,7 +16,7 @@ Fidelity,Finance,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.fidelity.c
 RTX,Aerospace,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.rtx.com,,yes
 Lockheed Martin,Aerospace,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://www.lockheedmartinjobs.com,,yes
 L3Harris,Defense,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.l3harris.com,,yes
-Honeywell,Manufacturing,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,custom,https://careers.honeywell.com,,yes
+Honeywell,Manufacturing,Medium,SWE|ML|Data|Embedded|Firmware|Robotics|Cybersecurity,oracle_orc,https://careers.honeywell.com,careers.honeywell.com|ibqbjb.fa.ocs.oraclecloud.com|CX_1|Honeywell,yes
 3M,Manufacturing,Medium,SWE|Data|Cybersecurity,custom,https://careers.3m.com,,yes
 Raymond James,Finance,Medium,SWE|Data|Cybersecurity,custom,https://www.raymondjames.com/careers,,yes
 Capital One,Finance,Medium,SWE|ML|Data|Cybersecurity,custom,https://www.capitalonecareers.com,,yes
@@ -43,7 +43,7 @@ Boeing,Aerospace,Medium,SWE|Embedded|Data,custom,https://jobs.boeing.com/interns
 Duke Energy,Energy/Utilities,Medium,SWE|Data|Cybersecurity,custom,https://www.duke-energy.com/our-company/careers,,yes
 UnitedHealth Group,Healthcare,Medium,SWE|Data|ML,custom,https://www.unitedhealthgroup.com/careers,,yes
 Parker Hannifin,Manufacturing,Medium,SWE|Embedded|Data,custom,https://www.parker.com/us/en/careers/internships.html,,yes
-Eaton,Manufacturing,Medium,SWE|Embedded|Data,custom,https://www.eaton.com/us/en-us/company/careers/university-students.html,,yes
+Eaton,Manufacturing,Medium,SWE|Embedded|Data,eightfold,https://www.eaton.com/us/en-us/company/careers/university-students.html,eaton.eightfold.ai|eaton.com,yes
 Mercury Insurance,Insurance,Medium,Data|SWE,custom,https://www.mercuryinsurance.com/about/careers-jobs/early-careers/internships.html,,yes
 PepsiCo,Consumer Goods,Medium,SWE|Data,custom,https://www.pepsicojobs.com/internshipsprograms/jobs,,yes
 Procter & Gamble,Consumer Goods,Medium,SWE|Data|ML,custom,https://www.pgcareers.com/global/en/internships,,yes

@@ -157,4 +157,64 @@ suspected-not-yet-verified platforms).
   in a real browser (watch the network tab on their careers page) rather
   than guessing - Jibe was found this way, more may be on it or on
   Workday/iCIMS-standalone
+
+## 2026-09-17 (continued) - registry expansion + generic scraper fallback
+
+### Completed
+- Curated 25 more hidden-gem companies into `data/company_registry.csv`
+  via web search (McKesson, Cigna, Liberty Mutual, USAA, MassMutual,
+  Northwestern Mutual, Truist, Charles Schwab, Edward Jones, Southwest
+  Airlines, FedEx, Home Depot, Lowe's, Dick's Sporting Goods, Kroger,
+  Illinois Tool Works, GE Aerospace, Boeing, Duke Energy, UnitedHealth
+  Group, Parker Hannifin, Eaton, Mercury Insurance, PepsiCo, Procter &
+  Gamble) - all with real, sourced career URLs
+- Added 17 defense contractors spanning big/medium/small tiers per user
+  request (Northrop Grumman, General Dynamics, BAE Systems Inc,
+  Huntington Ingalls Industries, Leidos, Booz Allen Hamilton, SAIC, CACI
+  International, Textron Systems, Leonardo DRS, Kratos Defense, Mercury
+  Systems, ManTech, Parsons Corporation, Peraton, MITRE Corporation,
+  Johns Hopkins Applied Physics Laboratory). Registry grew from 23 to
+  65 companies total across the session
+- Built `company_monitors/generic_browser_monitor.py` - a headless-browser
+  (Playwright/Chromium) fallback that can attempt discovery against any
+  `platform=custom` career page regardless of underlying ATS, since a
+  plain HTTP request can't render most of these sites' JS. Filters
+  results by word-boundary intern-title match, excludes generic nav
+  labels, and requires a job-id-shaped URL to reject category-page links
+- Finished wiring in `eightfold_monitor.py` and `oracle_orc_monitor.py`
+  (built but not connected in the previous entry) - John Deere is
+  `platform=eightfold`, Honeywell is `platform=oracle_orc`. Found and
+  added Eaton as a second Eightfold company along the way
+- Wired `send_sms_alert()` into the alert-creation path - a real text is
+  now attempted for every new match (no-ops safely without Twilio
+  credentials configured, which the user hasn't done yet - that requires
+  account creation Claude Code can't perform on their behalf)
+- Fixed a real bug: `requirements.txt` had been UTF-16-encoded since the
+  very first "fix" of it and was never verified at the byte level
+- Full live run across all 65 companies: 245 jobs retrieved, 211 new
+  internships inserted, 26 alerts created. The generic browser scraper
+  found real results for 24 of 59 `custom`-platform companies (154
+  postings), including RTX and Caterpillar where direct API
+  investigation had previously stalled
+
+### Status
+Live, structured monitoring for 6 companies (Hudl, Garmin, State Farm,
+John Deere, Eaton, Honeywell). Best-effort browser-scraped monitoring
+covering 24 more companies with real data. 35 `custom` companies still
+return nothing (blocked/no matching search box/genuinely no postings -
+indistinguishable without per-company follow-up). SMS code path is live
+but untested end-to-end since Twilio isn't configured.
+
+### Next Steps
+- User is setting up a Twilio account; once credentials are provided,
+  verify `send_sms_alert()` actually delivers a text end-to-end
+- Investigate the ~35 zero-result `custom` companies individually if
+  broader coverage matters more than effort saved - the generic scraper
+  found real data for a wide platform variety already, so remaining
+  companies likely need either a different search-trigger approach or
+  are genuinely blocking headless browsers
+- No scheduler exists yet - monitor only runs when manually invoked
+- Re-run the full 65-company monitor a second time to confirm idempotency
+  held at this scale (verified previously only for the native-adapter
+  subset)
 - Same Lever/per-user-resume/companies.csv-consolidation items as above
