@@ -1,0 +1,50 @@
+name: Monitor (full - includes browser-scraped custom companies)
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: monitor-full
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright's Chromium (with OS deps)
+        run: playwright install --with-deps chromium
+
+      - name: Run full monitor (all companies, including custom scraper)
+        env:
+          EMAIL_SENDER_ADDRESS: ${{ secrets.EMAIL_SENDER_ADDRESS }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          NOTIFICATION_PHONE_NUMBER: ${{ secrets.NOTIFICATION_PHONE_NUMBER }}
+          SMS_CARRIER_GATEWAY: ${{ secrets.SMS_CARRIER_GATEWAY }}
+        run: python src/internship_monitor_service.py
+
+      - name: Commit and push database changes (only if something changed)
+        run: |
+          git config user.name "hidden-gem-agent-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add database/internship_agent.db
+          git diff --cached --quiet && exit 0
+          git commit -m "Full monitor run: update internship database [skip ci]"
+          git pull --rebase origin main
+          git push

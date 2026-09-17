@@ -1,0 +1,47 @@
+name: Monitor (fast - structured API companies)
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: monitor-fast
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run fast monitor (skips platform=custom, no browser needed)
+        working-directory: .
+        env:
+          EMAIL_SENDER_ADDRESS: ${{ secrets.EMAIL_SENDER_ADDRESS }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          NOTIFICATION_PHONE_NUMBER: ${{ secrets.NOTIFICATION_PHONE_NUMBER }}
+          SMS_CARRIER_GATEWAY: ${{ secrets.SMS_CARRIER_GATEWAY }}
+        run: python src/internship_monitor_service.py --fast
+
+      - name: Commit and push database changes (only if something changed)
+        run: |
+          git config user.name "hidden-gem-agent-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add database/internship_agent.db
+          git diff --cached --quiet && exit 0
+          git commit -m "Fast monitor run: update internship database [skip ci]"
+          git pull --rebase origin main
+          git push

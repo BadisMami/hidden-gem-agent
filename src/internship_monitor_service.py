@@ -1,3 +1,5 @@
+import argparse
+
 from company_registry_loader import load_enabled_companies
 from company_monitors.greenhouse_monitor import get_greenhouse_internships
 from company_monitors.jibe_monitor import get_jibe_internships
@@ -76,11 +78,25 @@ def _build_platform_adapters(browser):
     }
 
 
-def run_monitor():
+def run_monitor(skip_custom=False):
+    """
+    skip_custom=True skips platform="custom" companies entirely (the ones
+    needing the slow headless-browser scraper), without even importing
+    Playwright. Intended for a frequent, lightweight scheduled run (e.g.
+    every 15 minutes) that only re-checks the fast, structured-API
+    companies (greenhouse/jibe/eightfold/oracle_orc) - pair with a
+    separate, much less frequent full run (skip_custom=False) that also
+    covers the "custom" companies, since scraping ~60 sites with a real
+    browser takes minutes, not seconds, and doesn't need to happen nearly
+    as often to still catch new postings.
+    """
 
     create_database()
 
     companies = load_enabled_companies()
+
+    if skip_custom:
+        companies = [c for c in companies if c.get("platform") != "custom"]
 
     summary = {
         "companies_checked": len(companies),
@@ -223,4 +239,17 @@ def print_summary(summary):
 
 if __name__ == "__main__":
 
-    run_monitor()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--fast",
+        action="store_true",
+        help=(
+            "Skip platform=custom companies (the slow, headless-browser "
+            "ones). Only checks companies with a verified structured API "
+            "(greenhouse/jibe/eightfold/oracle_orc). Fast enough to run "
+            "every few minutes; doesn't require Playwright/Chromium."
+        ),
+    )
+    args = parser.parse_args()
+
+    run_monitor(skip_custom=args.fast)
