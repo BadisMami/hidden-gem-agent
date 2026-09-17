@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -9,14 +10,25 @@ from resume_parser import extract_text
 
 DB_PATH = "database/internship_agent.db"
 
+# Allowlist for load_table - never build SQL from unvalidated input.
+ALLOWED_TABLES = {"internships", "alerts", "companies", "users"}
+
 
 @st.cache_data
 def load_table(table_name):
 
+    if table_name not in ALLOWED_TABLES:
+        raise ValueError(f"Unknown table: {table_name}")
+
     conn = sqlite3.connect(DB_PATH)
 
+    query = f"SELECT * FROM {table_name}"
+
+    if table_name == "internships":
+        query += " WHERE is_active = 1"
+
     df = pd.read_sql(
-        f"SELECT * FROM {table_name}",
+        query,
         conn
     )
 
@@ -37,6 +49,10 @@ st.set_page_config(
 st.sidebar.header(
     "📄 Resume Upload"
 )
+
+if st.sidebar.button("🔄 Refresh Data"):
+    st.cache_data.clear()
+    st.rerun()
 
 uploaded_file = st.sidebar.file_uploader(
     "Upload Resume (PDF)",
@@ -59,13 +75,19 @@ if uploaded_file is not None:
 
         temp_resume_path = tmp_file.name
 
-    detected_skills = get_user_skills(
-        temp_resume_path
-    )
+    try:
 
-    raw_text = extract_text(
-        temp_resume_path
-    )
+        detected_skills = get_user_skills(
+            temp_resume_path
+        )
+
+        raw_text = extract_text(
+            temp_resume_path
+        )
+
+    finally:
+
+        os.remove(temp_resume_path)
 
     st.sidebar.success(
         "Resume Processed"
@@ -174,26 +196,50 @@ with tab1:
     )
 
     search_term = st.text_input(
-        "🔍 Search internships"
+        "🔍 Search company, title, location, or role type"
     )
 
     internships = internships_df.copy()
 
     if search_term:
 
-        internships = internships[
-            internships["title"]
-            .str.contains(
-                search_term,
-                case=False,
-                na=False
-            )
+        searchable_columns = [
+            "company",
+            "title",
+            "location",
+            "role_type"
         ]
 
-    st.dataframe(
-        internships,
-        width="stretch"
-    )
+        mask = pd.Series(False, index=internships.index)
+
+        for column in searchable_columns:
+
+            if column in internships.columns:
+
+                mask |= internships[column].astype(str).str.contains(
+                    search_term,
+                    case=False,
+                    na=False
+                )
+
+        internships = internships[mask]
+
+    if len(internships) == 0:
+
+        st.info("No internships match your search.")
+
+    else:
+
+        st.dataframe(
+            internships,
+            width="stretch",
+            column_config={
+                "application_url": st.column_config.LinkColumn(
+                    "Apply",
+                    display_text="Apply →"
+                )
+            }
+        )
 
 # =====================================
 # RECOMMENDATIONS
@@ -251,10 +297,18 @@ with tab2:
                         "company",
                         "title",
                         "location",
-                        "match_score"
+                        "role_type",
+                        "match_score",
+                        "application_url"
                     ]
                 ],
-                width="stretch"
+                width="stretch",
+                column_config={
+                    "application_url": st.column_config.LinkColumn(
+                        "Apply",
+                        display_text="Apply →"
+                    )
+                }
             )
 
 # =====================================
@@ -269,17 +323,23 @@ with tab3:
 
     alerts = alerts_df.copy()
 
-    if "match_score" in alerts.columns:
+    if len(alerts) == 0:
 
-        alerts = alerts.sort_values(
-            by="match_score",
-            ascending=False
+        st.info("No alerts yet. Alerts appear here as new matching internships are discovered.")
+
+    else:
+
+        if "match_score" in alerts.columns:
+
+            alerts = alerts.sort_values(
+                by="match_score",
+                ascending=False
+            )
+
+        st.dataframe(
+            alerts,
+            width="stretch"
         )
-
-    st.dataframe(
-        alerts,
-        width="stretch"
-    )
 
 # =====================================
 # COMPANIES
