@@ -170,14 +170,35 @@ def _build_batch_sms_body(new_alerts):
             f"{internship.get('application_url', '')}"
         )
 
-    lines = [f"{count} new internships found:"]
+    # Group same-named postings at the same company together (e.g. a
+    # company opening 5 identical "Software Engineering Intern" reqs at
+    # once) so the text reads as one role with 5 links, not 5 separate
+    # near-duplicate entries.
+    groups = {}
+    group_order = []
 
     for internship in new_alerts:
 
-        lines.append(
-            f"- {internship['company']}: {internship['title']} "
-            f"({internship.get('location', 'Unknown')})"
-        )
+        key = (internship["company"], internship["title"])
+
+        if key not in groups:
+            groups[key] = []
+            group_order.append(key)
+
+        groups[key].append(internship)
+
+    lines = [f"{count} new internships found:"]
+
+    for key in group_order:
+
+        company, title = key
+        items = groups[key]
+
+        lines.append("")
+        lines.append(f"{title} - {company}")
+
+        for item in items:
+            lines.append(item.get("application_url", ""))
 
     return "\n".join(lines)
 

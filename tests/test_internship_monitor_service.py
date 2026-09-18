@@ -43,6 +43,54 @@ def test_multiple_alerts_produce_one_consolidated_message():
     assert "Initech" in body
 
 
+def test_same_role_same_company_grouped_with_all_links():
+    """
+    User request: when a company opens several reqs under the same
+    title (e.g. 5 "Software Engineering Intern" postings at once), show
+    one "Title - Company" header followed by all 5 links back to back,
+    rather than repeating the title/company on every line.
+    """
+
+    alerts = [
+        _make_internship(
+            "Lockheed Martin", "Embedded Software Engineer Intern",
+            "Fort Worth, TX", "https://lm.com/job/1"
+        ),
+        _make_internship(
+            "Lockheed Martin", "Embedded Software Engineer Intern",
+            "Austin, TX", "https://lm.com/job/2"
+        ),
+        _make_internship(
+            "Lockheed Martin", "Embedded Software Engineer Intern",
+            "Remote", "https://lm.com/job/3"
+        ),
+        _make_internship(
+            "Lockheed Martin", "Embedded Software Engineer Intern",
+            "Denver, CO", "https://lm.com/job/4"
+        ),
+        _make_internship(
+            "Lockheed Martin", "Embedded Software Engineer Intern",
+            "Orlando, FL", "https://lm.com/job/5"
+        ),
+        _make_internship(
+            "Boeing", "Software Engineering Intern",
+            "Seattle, WA", "https://boeing.com/job/9"
+        ),
+    ]
+
+    body = svc._build_batch_sms_body(alerts)
+
+    assert "6 new internships found" in body
+    # One header for the 5 identically-titled Lockheed Martin postings.
+    assert body.count("Embedded Software Engineer Intern - Lockheed Martin") == 1
+    assert body.count("Software Engineering Intern - Boeing") == 1
+
+    for i in range(1, 6):
+        assert f"https://lm.com/job/{i}" in body
+
+    assert "https://boeing.com/job/9" in body
+
+
 def test_large_batch_is_one_message_listing_everything():
     """
     Regression test: the bug that got 40 SEPARATE texts sent in one run
@@ -53,7 +101,9 @@ def test_large_batch_is_one_message_listing_everything():
     """
 
     alerts = [
-        _make_internship(f"Company{i}", f"Intern Role {i}")
+        _make_internship(
+            f"Company{i}", f"Intern Role {i}", url=f"https://example.com/job/{i}"
+        )
         for i in range(40)
     ]
 
@@ -61,10 +111,13 @@ def test_large_batch_is_one_message_listing_everything():
 
     assert "40 new internships" in body
 
-    # Every posting gets its own line, all within the one message body.
-    listed_lines = [
-        line for line in body.split("\n") if line.startswith("- Company")
+    # Each of the 40 distinct roles gets its own header line.
+    header_lines = [
+        line for line in body.split("\n")
+        if line.startswith("Intern Role")
     ]
-    assert len(listed_lines) == 40
+    assert len(header_lines) == 40
     assert "Company0" in body
     assert "Company39" in body
+    assert "https://example.com/job/0" in body
+    assert "https://example.com/job/39" in body
