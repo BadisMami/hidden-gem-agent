@@ -143,7 +143,48 @@ def run_monitor(skip_custom=False):
     return summary
 
 
+def _build_batch_sms_body(new_alerts, max_listed=5):
+    """
+    Consolidates all of this run's new-internship alerts into ONE text,
+    instead of one text per internship. Carriers' email-to-SMS gateways
+    (e.g. T-Mobile's tmomail.net) rate-limit and will bounce/block a
+    sender that fires off many messages in a burst - a single run that
+    finds several new postings at once (e.g. right after adding a new
+    company) would otherwise trigger exactly that.
+    """
+
+    count = len(new_alerts)
+
+    if count == 1:
+
+        internship = new_alerts[0]
+
+        return (
+            f"New internship: {internship['company']} - "
+            f"{internship['title']} "
+            f"({internship.get('location', 'Unknown')})\n"
+            f"{internship.get('application_url', '')}"
+        )
+
+    lines = [f"{count} new internships found:"]
+
+    for internship in new_alerts[:max_listed]:
+
+        lines.append(
+            f"- {internship['company']}: {internship['title']}"
+        )
+
+    remaining = count - max_listed
+
+    if remaining > 0:
+        lines.append(f"...and {remaining} more. Check your dashboard.")
+
+    return "\n".join(lines)
+
+
 def _run_all_companies(companies, adapters, summary):
+
+    new_alerts = []
 
     for company in companies:
 
@@ -203,19 +244,18 @@ def _run_all_companies(companies, adapters, summary):
 
                     summary["alerts_created"] += 1
 
-                    sms_body = (
-                        f"New internship: {internship['company']} - "
-                        f"{internship['title']} "
-                        f"({internship.get('location', 'Unknown')})\n"
-                        f"{internship.get('application_url', '')}"
-                    )
-
-                    if send_sms_alert(sms_body):
-                        summary["sms_sent"] += 1
+                    new_alerts.append(internship)
 
             else:
 
                 summary["existing_internships_skipped"] += 1
+
+    if new_alerts:
+
+        sms_body = _build_batch_sms_body(new_alerts)
+
+        if send_sms_alert(sms_body):
+            summary["sms_sent"] += 1
 
 
 def print_summary(summary):
