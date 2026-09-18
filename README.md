@@ -36,9 +36,11 @@ inserts normalized internship records directly into SQLite via a
 dedup-aware `upsert_internship()` — re-running the monitor never creates
 duplicate rows, and alerts are only generated the first time a job is seen.
 
-`data/companies.csv` / `company_database.py` / `company_matcher.py` are a
-separate, older reference table (role-flag columns) used for manual company
-lookup and are not part of the live-monitoring pipeline.
+`data/companies.csv` is a separate, older reference table (role-flag
+columns) seeded into the database's `companies` table and shown in the
+dashboard's Companies tab - it's static reference data, not part of the
+live-monitoring pipeline (that's `data/company_registry.csv`, described
+above).
 
 ## Setup
 
@@ -180,11 +182,14 @@ Best-effort fallback for everything else:
   (usually does) vs. a search-results page; it can't handle career pages
   needing more than one search-box interaction to reach real listings.
 
-- **Lever, Workday** — planned, not yet implemented (`lever_monitor.py`,
-  `workday_monitor.py` are empty stubs). None of the registry's
-  `platform=custom` companies were found on public Greenhouse or Lever
-  boards when checked (2026-09-17) - if a new company should be added,
-  check there before assuming it needs the generic scraper.
+- **Lever, Workday** — planned, no adapter built yet. None of the
+  registry's `platform=custom` companies were found on public Greenhouse
+  or Lever boards when checked (2026-09-17) - if a new company should be
+  added, check there before assuming it needs the generic scraper. (Note:
+  a couple of `platform=custom` companies - 3M, Duke Energy - turned out
+  to run Workday and work fine through the generic browser scraper
+  without a dedicated adapter; only build one if the generic scraper
+  can't handle a Workday site.)
 
 ## Limitations
 
@@ -206,8 +211,10 @@ Best-effort fallback for everything else:
    with a discoverable JSON API (open the site in a real browser and watch
    the network tab for `/api/` or `myworkdayjobs.com` calls) before
    assuming a scraper is the only option - Jibe was found this way.
-2. Generic Lever adapter (`company_monitors/lever_monitor.py`), verified
-   against at least one real Lever-hosted company before enabling more.
+2. Generic Lever adapter (`company_monitors/lever_monitor.py` doesn't
+   exist yet - create it following the pattern of the other adapters in
+   that folder), verified against at least one real Lever-hosted company
+   before enabling more.
 3. Workday support (tenant-specific, deferred until Greenhouse/Lever are
    stable).
 4. The generic browser scraper (`generic_browser_monitor.py`) covers 24
