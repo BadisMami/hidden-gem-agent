@@ -143,14 +143,18 @@ def run_monitor(skip_custom=False):
     return summary
 
 
-def _build_batch_sms_body(new_alerts, max_listed=5):
+def _build_batch_sms_body(new_alerts):
     """
-    Consolidates all of this run's new-internship alerts into ONE text,
-    instead of one text per internship. Carriers' email-to-SMS gateways
-    (e.g. T-Mobile's tmomail.net) rate-limit and will bounce/block a
-    sender that fires off many messages in a burst - a single run that
-    finds several new postings at once (e.g. right after adding a new
-    company) would otherwise trigger exactly that.
+    Consolidates all of this run's new-internship alerts into ONE
+    message (one SMTP send), instead of one text per internship.
+    Carriers' email-to-SMS gateways (e.g. T-Mobile's tmomail.net)
+    rate-limit and will bounce/block a sender that fires off many
+    separate messages in a burst - a single run that finds several new
+    postings at once (e.g. right after adding a new company) would
+    otherwise trigger exactly that. Listing everything in one email
+    doesn't have that problem even if the carrier splits it into
+    multiple physical texts on the receiving end, since it's still one
+    send from this end.
     """
 
     count = len(new_alerts)
@@ -168,16 +172,12 @@ def _build_batch_sms_body(new_alerts, max_listed=5):
 
     lines = [f"{count} new internships found:"]
 
-    for internship in new_alerts[:max_listed]:
+    for internship in new_alerts:
 
         lines.append(
-            f"- {internship['company']}: {internship['title']}"
+            f"- {internship['company']}: {internship['title']} "
+            f"({internship.get('location', 'Unknown')})"
         )
-
-    remaining = count - max_listed
-
-    if remaining > 0:
-        lines.append(f"...and {remaining} more. Check your dashboard.")
 
     return "\n".join(lines)
 
