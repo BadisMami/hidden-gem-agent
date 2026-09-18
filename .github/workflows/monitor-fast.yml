@@ -2,7 +2,13 @@ name: Monitor (fast - structured API companies)
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    # Every 15 min, but only 8am-11pm Eastern (quiet overnight, 11pm-8am
+    # ET, resumes automatically at 8am ET every day). GitHub Actions
+    # cron is fixed UTC with no DST awareness, so this is pinned to the
+    # current EDT offset (UTC-4) - once Daylight Saving ends in
+    # November, real local times will drift an hour earlier until this
+    # is updated to the EST equivalent (13-23,0-3 instead of 12-23,0-2).
+    - cron: "*/15 12-23,0-2 * * *"
   workflow_dispatch: {}
 
 concurrency:
