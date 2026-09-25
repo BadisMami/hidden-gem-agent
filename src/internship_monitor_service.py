@@ -1,4 +1,6 @@
 import argparse
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from company_registry_loader import load_enabled_companies
 from company_monitors.greenhouse_monitor import get_greenhouse_internships
@@ -8,7 +10,25 @@ from company_monitors.oracle_orc_monitor import get_oracle_orc_internships
 from company_monitors.generic_browser_monitor import get_browser_scraped_internships
 from database_setup import create_database
 from database_monitor import upsert_internship, create_alert_for_new_internship
+from database_alerts import get_unsent_alerts, mark_alerts_sent
 from sms_alerts import send_sms_alert
+
+# Texts only go out 8am-10pm Eastern. Alerts found outside that window
+# stay queued in the DB and go out with the first run after 8am. Checked
+# here rather than in the workflow cron, since GitHub often starts
+# scheduled runs hours late and cron can't follow Daylight Saving.
+TEXTING_TIMEZONE = ZoneInfo("America/New_York")
+TEXTING_START_HOUR = 8
+TEXTING_END_HOUR = 22
+
+
+def in_texting_window(now=None):
+
+    now = now or datetime.now(TEXTING_TIMEZONE)
+
+    local = now.astimezone(TEXTING_TIMEZONE)
+
+    return TEXTING_START_HOUR <= local.hour < TEXTING_END_HOUR
 
 
 def _eightfold_adapter(company):
@@ -109,6 +129,7 @@ def run_monitor(skip_custom=False):
         "existing_internships_skipped": 0,
         "alerts_created": 0,
         "sms_sent": 0,
+        "alerts_held": 0,
     }
 
     needs_browser = any(
@@ -138,9 +159,42 @@ def run_monitor(skip_custom=False):
             companies, _build_platform_adapters(None), summary
         )
 
+    _send_pending_alerts(summary)
+
     print_summary(summary)
 
     return summary
+
+
+def _send_pending_alerts(summary, now=None):
+    """
+    Text every queued (not yet sent) alert in one message, if inside the
+    texting window. Only marks them sent once the send succeeds, so a
+    failed send is retried by the next run instead of lost.
+    """
+
+    pending = get_unsent_alerts()
+
+    if not pending:
+        return
+
+    if not in_texting_window(now):
+
+        print(f"Outside texting hours - holding {len(pending)} alert(s).")
+
+        summary["alerts_held"] = len(pending)
+
+        return
+
+    if send_sms_alert(_build_batch_sms_body(pending)):
+
+        mark_alerts_sent([alert["id"] for alert in pending])
+
+        summary["sms_sent"] += 1
+
+    else:
+
+        summary["alerts_held"] = len(pending)
 
 
 def _build_batch_sms_body(new_alerts):
@@ -205,8 +259,6 @@ def _build_batch_sms_body(new_alerts):
 
 def _run_all_companies(companies, adapters, summary):
 
-    new_alerts = []
-
     for company in companies:
 
         name = company.get("company", "Unknown")
@@ -259,24 +311,16 @@ def _run_all_companies(companies, adapters, summary):
                     internship["title"],
                     internship.get("location", ""),
                     internship.get("role_type", "Other"),
+                    application_url=internship.get("application_url", ""),
                 )
 
                 if alert:
 
                     summary["alerts_created"] += 1
 
-                    new_alerts.append(internship)
-
             else:
 
                 summary["existing_internships_skipped"] += 1
-
-    if new_alerts:
-
-        sms_body = _build_batch_sms_body(new_alerts)
-
-        if send_sms_alert(sms_body):
-            summary["sms_sent"] += 1
 
 
 def print_summary(summary):
@@ -296,6 +340,7 @@ def print_summary(summary):
     )
     print(f"Alerts created: {summary['alerts_created']}")
     print(f"SMS sent: {summary['sms_sent']}")
+    print(f"Alerts held for later: {summary['alerts_held']}")
 
 
 if __name__ == "__main__":

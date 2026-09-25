@@ -21,15 +21,14 @@ def test_db():
     os.remove(path)
 
 
-def test_alert_created_for_matching_role(test_db):
-    """data/users.csv includes a user interested in SWE."""
+@pytest.mark.parametrize("role_type", ["SWE", "ML", "Embedded", "Robotics"])
+def test_alert_created_for_target_role(test_db, role_type):
 
     alert = database_monitor.create_alert_for_new_internship(
-        "Acme", "SWE Intern", "Remote", "SWE", db_path=test_db
+        "Acme", "Some Intern", "Remote", role_type, db_path=test_db
     )
 
     assert alert is not None
-    assert alert["match_score"] >= 1
 
     conn = sqlite3.connect(test_db)
     count = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
@@ -38,11 +37,14 @@ def test_alert_created_for_matching_role(test_db):
     assert count == 1
 
 
-def test_no_alert_for_unmatched_role(test_db):
-    """No user in data/users.csv is interested in 'Product'."""
+@pytest.mark.parametrize(
+    "role_type",
+    ["Cybersecurity", "Firmware", "Hardware", "Data", "Product", "Other"]
+)
+def test_no_alert_for_non_target_role(test_db, role_type):
 
     alert = database_monitor.create_alert_for_new_internship(
-        "Acme", "Product Intern", "Remote", "Product", db_path=test_db
+        "Acme", "Some Intern", "Remote", role_type, db_path=test_db
     )
 
     assert alert is None
@@ -52,6 +54,19 @@ def test_no_alert_for_unmatched_role(test_db):
     conn.close()
 
     assert count == 0
+
+
+def test_no_alert_for_phd_or_masters_internship(test_db):
+
+    for title in [
+        "Current PhD, AI Engineering Internship Program - Summer 2027",
+        "Current Master's - Machine Learning Internship",
+        "R&D PhD Summer Intern: AI Agents",
+    ]:
+        alert = database_monitor.create_alert_for_new_internship(
+            "Acme", title, "Remote", "ML", db_path=test_db
+        )
+        assert alert is None
 
 
 def test_alert_only_fires_once_per_new_internship(test_db):
@@ -87,3 +102,53 @@ def test_alert_only_fires_once_per_new_internship(test_db):
     conn.close()
 
     assert count == 1
+
+
+def test_new_alert_is_queued_until_sent(test_db):
+
+    import database_alerts
+
+    database_monitor.create_alert_for_new_internship(
+        "Acme", "SWE Intern", "Remote", "SWE",
+        application_url="https://acme.com/jobs/1", db_path=test_db
+    )
+
+    pending = database_alerts.get_unsent_alerts(db_path=test_db)
+
+    assert len(pending) == 1
+    assert pending[0]["application_url"] == "https://acme.com/jobs/1"
+
+    database_alerts.mark_alerts_sent(
+        [a["id"] for a in pending], db_path=test_db
+    )
+
+    assert database_alerts.get_unsent_alerts(db_path=test_db) == []
+
+
+def test_migration_marks_existing_alerts_as_already_sent():
+    """Alerts from before the queue existed were already texted."""
+
+    import database_alerts
+
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+
+    try:
+        conn = sqlite3.connect(path)
+        conn.execute(
+            "CREATE TABLE alerts (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "timestamp TEXT, company TEXT, title TEXT, location TEXT, "
+            "matched_users TEXT, match_score INTEGER)"
+        )
+        conn.execute(
+            "INSERT INTO alerts (company, title) VALUES ('Old', 'Old Intern')"
+        )
+        conn.commit()
+        conn.close()
+
+        database_setup.create_database(path)
+
+        assert database_alerts.get_unsent_alerts(db_path=path) == []
+
+    finally:
+        os.remove(path)

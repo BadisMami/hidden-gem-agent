@@ -4,7 +4,6 @@ import re
 from datetime import date
 
 import requests
-import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -99,57 +98,6 @@ def get_greenhouse_internships(company_name, board_name):
     return internships
 
 
-def save_internships(
-    internships,
-    output_file="data/internships.csv"
-):
-    """
-    Append internships to the CSV file (manual/debugging use only - the
-    monitoring service writes directly to SQLite via database_monitor).
-    """
-
-    if not internships:
-        print("No internships found.")
-        return
-
-    new_df = pd.DataFrame(internships)
-
-    try:
-        existing_df = pd.read_csv(output_file)
-
-        combined_df = pd.concat(
-            [existing_df, new_df],
-            ignore_index=True
-        )
-
-        combined_df = (
-            combined_df
-            .drop_duplicates(
-                subset=[
-                    "company",
-                    "title",
-                    "location"
-                ]
-            )
-        )
-
-        combined_df.to_csv(
-            output_file,
-            index=False
-        )
-
-    except FileNotFoundError:
-        new_df.to_csv(
-            output_file,
-            index=False
-        )
-
-    print(
-        f"Added {len(internships)} "
-        f"internships to {output_file}"
-    )
-
-
 if __name__ == "__main__":
 
     hudl_jobs = get_greenhouse_internships(
@@ -161,5 +109,3 @@ if __name__ == "__main__":
 
     for job in hudl_jobs:
         print(job)
-
-    save_internships(hudl_jobs)

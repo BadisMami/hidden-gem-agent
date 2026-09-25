@@ -75,6 +75,40 @@ ROLE_KEYWORDS = [
 ]
 
 
+# The role categories I actually want texts for. Every internship is
+# still stored and classified, but only these trigger an alert.
+TARGET_ROLES = {"SWE", "ML", "Embedded", "Robotics"}
+
+
+def is_target_role(role_type):
+
+    return role_type in TARGET_ROLES
+
+
+# PhD/Master's/MBA-only postings. Deliberately doesn't match a bare "MS"
+# or "graduate" - those collide with "MS Office", "new grad", etc.
+_GRAD_ONLY_RE = re.compile(
+    r"\bph\.?\s?d\b|\bdoctoral\b|\bdoctorate\b|\bpost-?doc|"
+    r"\bmaster'?s\b|\bmasters\b|\bmaster of\b|\bmba\b|\bgraduate student",
+    re.IGNORECASE
+)
+
+_UNDERGRAD_RE = re.compile(r"\bundergrad", re.IGNORECASE)
+
+
+def is_grad_only(title):
+    """
+    True for internships aimed at PhD/Master's/MBA students. A title that
+    also mentions undergrads (e.g. "Undergraduate and Master's R&D
+    Intern") is still open to undergrads, so it doesn't count.
+    """
+
+    if not title:
+        return False
+
+    return bool(_GRAD_ONLY_RE.search(title)) and not _UNDERGRAD_RE.search(title)
+
+
 def classify_role(title):
     """
     Deterministically classify an internship title into a role category.

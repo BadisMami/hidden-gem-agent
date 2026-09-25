@@ -1,18 +1,18 @@
-name: Monitor (fast - structured API companies)
+name: Monitor (every 4 hours, all companies)
 
 on:
   schedule:
-    # Every 15 min, but only 8am-11pm Eastern (quiet overnight, 11pm-8am
-    # ET, resumes automatically at 8am ET every day). GitHub Actions
-    # cron is fixed UTC with no DST awareness, so this is pinned to the
-    # current EDT offset (UTC-4) - once Daylight Saving ends in
-    # November, real local times will drift an hour earlier until this
-    # is updated to the EST equivalent (13-23,0-3 instead of 12-23,0-2).
-    - cron: "*/15 12-23,0-2 * * *"
+    # Every 4 hours around the clock, at :17 past (GitHub drops far more
+    # runs scheduled exactly on the hour). UTC 2,6,10,14,18,22 = 10pm,
+    # 2am, 6am, 10am, 2pm, 6pm EDT (an hour earlier in EST). Overnight
+    # runs still scan and record new postings, but texts are held until
+    # 8am Eastern by the texting window in internship_monitor_service.py -
+    # that check, not this cron, is what enforces quiet hours.
+    - cron: "17 2,6,10,14,18,22 * * *"
   workflow_dispatch: {}
 
 concurrency:
-  group: monitor-fast
+  group: monitor
   cancel-in-progress: false
 
 permissions:
@@ -21,6 +21,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -33,14 +34,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run fast monitor (skips platform=custom, no browser needed)
-        working-directory: .
+      - name: Install Playwright's Chromium (with OS deps)
+        run: playwright install --with-deps chromium
+
+      - name: Run full monitor (all companies, including custom scraper)
         env:
           EMAIL_SENDER_ADDRESS: ${{ secrets.EMAIL_SENDER_ADDRESS }}
           EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
           NOTIFICATION_PHONE_NUMBER: ${{ secrets.NOTIFICATION_PHONE_NUMBER }}
           SMS_CARRIER_GATEWAY: ${{ secrets.SMS_CARRIER_GATEWAY }}
-        run: python src/internship_monitor_service.py --fast
+        run: python src/internship_monitor_service.py
 
       - name: Commit and push database changes (only if something changed)
         run: |
@@ -48,6 +51,6 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add database/internship_agent.db
           git diff --cached --quiet && exit 0
-          git commit -m "Fast monitor run: update internship database [skip ci]"
+          git commit -m "Monitor run: update internship database [skip ci]"
           git pull --rebase origin main
           git push

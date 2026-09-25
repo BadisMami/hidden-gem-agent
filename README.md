@@ -3,7 +3,8 @@
 An agent that automatically discovers technical internships at recognizable
 **non-Big-Tech** companies — Target, Chipotle, Progressive, State Farm, John
 Deere, Garmin, Hudl, and similar "hidden gem" employers that CS/CE students
-don't usually think to check. It is a discovery and alerting tool, not an
+don't usually think to check. It's tailored to one person (me): only
+SWE, ML, Embedded, and Robotics internships trigger a text. It is a discovery and alerting tool, not an
 application tracker: it does not track saved jobs, applied status, or
 interview history.
 
@@ -23,8 +24,8 @@ database_monitor.py (dedup-aware upsert)
         v
 database/internship_agent.db (SQLite - runtime source of truth)
         |
-        +--> dashboard.py (Streamlit: search, recommendations, alerts)
-        +--> database_alerts.py / user_matcher.py (alerts on new matches)
+        +--> dashboard.py (Streamlit: search, alerts, companies)
+        +--> database_alerts.py (alerts on new target-role matches)
 ```
 
 Company monitoring is registry-driven: `data/company_registry.csv` lists each
@@ -36,11 +37,10 @@ inserts normalized internship records directly into SQLite via a
 dedup-aware `upsert_internship()` — re-running the monitor never creates
 duplicate rows, and alerts are only generated the first time a job is seen.
 
-`data/companies.csv` is a separate, older reference table (role-flag
-columns) seeded into the database's `companies` table and shown in the
-dashboard's Companies tab - it's static reference data, not part of the
-live-monitoring pipeline (that's `data/company_registry.csv`, described
-above).
+Every posting is stored and classified by `role_classifier.py`, but only
+roles in `TARGET_ROLES` (`SWE`, `ML`, `Embedded`, `Robotics`, defined in
+`src/role_classifier.py`) create an alert and a text. Edit that set to
+change what you get texted about.
 
 ## Setup
 
@@ -61,14 +61,11 @@ Copy `.env.example` to `.env` if you want SMS alerts (optional, see below).
 ## Database
 
 The SQLite database at `database/internship_agent.db` is the runtime source
-of truth for internships. CSV files remain useful for seed/reference data.
+of truth for internships and alerts.
 
 ```powershell
 # Create or safely migrate the schema (idempotent, preserves existing rows)
 python src/database_setup.py
-
-# Seed companies/users/internships from the CSV files
-python src/database_loader.py
 ```
 
 ## Running the monitor
@@ -94,8 +91,8 @@ streamlit run src/dashboard.py
 ```
 
 Tabs: Internships (search across company/title/location/role type, with
-clickable Apply links), Recommendations (from an uploaded resume's detected
-skills), Alerts, Companies, Users. Use the sidebar "Refresh Data" button
+clickable Apply links, filtered to my target roles by default), Alerts
+(newest first), Companies (the registry). Use the sidebar "Refresh Data" button
 after running the monitor to pick up new rows without restarting Streamlit.
 
 ## Tests
@@ -105,9 +102,8 @@ python -m pytest tests/ -v
 ```
 
 Covers role classification, URL cleanup, mocked Greenhouse parsing,
-internship dedup/upsert behavior, alert-only-on-new-job logic, and resume
-skill-extraction regex edge cases (C++, Node.js variants, ROS vs. false
-match inside "Microsoft").
+internship dedup/upsert behavior, alert-only-on-new-job logic, and
+target-role alert filtering.
 
 ## Environment variables
 
@@ -196,11 +192,8 @@ Best-effort fallback for everything else:
 - Role classification (`src/role_classifier.py`) is deterministic
   keyword matching, not ML-based — titles it hasn't seen may land in
   `Other`.
-- Alert matching uses each user's declared interests (`data/users.csv`),
-  not a per-user stored resume — there's no per-user resume storage yet,
-  so monitor-run alerts can't do skill-level scoring (only the
-  Streamlit dashboard's Recommendations tab does, from a freshly uploaded
-  resume).
+- Alert matching is by role category only (`TARGET_ROLES`) - postings
+  classified as `Other` (common for browser-scraped titles) never alert.
 - Custom company career-page monitoring is scrape-only and not yet
   connected to the database pipeline.
 
@@ -222,10 +215,3 @@ Best-effort fallback for everything else:
    35 individually (some are DNS/timeout failures worth retrying, others
    need a different search-trigger approach or may genuinely block
    headless browsers).
-5. Per-user stored resumes so monitor-run alerts can score by skill match,
-   not just declared interest.
-6. Set up a scheduler (Windows Task Scheduler, cron, etc.) so the monitor
-   runs periodically instead of only on manual invocation.
-7. SMS alerts are wired in via email-to-SMS gateway (see Environment
-   variables above) - untested end-to-end until `.env` has real Gmail
-   App Password + carrier gateway values filled in.

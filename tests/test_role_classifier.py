@@ -1,4 +1,6 @@
-from role_classifier import classify_role
+import pytest
+
+from role_classifier import classify_role, is_grad_only
 
 
 def test_swe_titles():
@@ -47,3 +49,30 @@ def test_empty_title_is_other():
 
 def test_cybersecurity_title():
     assert classify_role("Cybersecurity Analyst Intern") == "Cybersecurity"
+
+
+@pytest.mark.parametrize("title", [
+    "Current PhD, AI Engineering Internship Program - Summer 2027",
+    "2027 Summer Internship - PhD Data Science",
+    "Ph.D. Robotics Intern",
+    "Current Master's - Data Science Internship",
+    "Masters Software Engineering Intern",
+    "MBA Intern, Finance Leadership Development Program",
+    "Doctoral Research Intern",
+    "Graduate Student Embedded Intern",
+])
+def test_grad_only_titles_detected(title):
+    assert is_grad_only(title) is True
+
+
+@pytest.mark.parametrize("title", [
+    "Software Engineering Intern",
+    "Software Engineer - Undergrad Internship - Summer 2027",
+    "Internship - 2027 Undergraduate and Master's Research & Development Intern",
+    "Embedded Systems Intern",
+    "Microsoft Office / MS Excel Intern",
+    "Intern and New Grad Opportunities",
+    "Mastercard Software Engineering Intern",
+])
+def test_undergrad_titles_not_flagged(title):
+    assert is_grad_only(title) is False

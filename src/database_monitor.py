@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 
 from database_setup import DB_PATH, _compute_dedup_key
-from user_matcher import find_matching_users
+from role_classifier import is_target_role, is_grad_only
 from database_alerts import save_alert
 
 
@@ -93,57 +93,24 @@ def create_alert_for_new_internship(
     title,
     location,
     role_type,
+    application_url="",
     db_path=DB_PATH
 ):
     """
-    Create an alert for a newly discovered internship, matched against
-    users' declared interests (role_type). match_score is the number of
-    matched users - resume-based scoring requires a per-user stored
-    resume, which this schema does not track.
+    Create an alert for a newly discovered internship if its role_type is
+    one of my target roles (see role_classifier.TARGET_ROLES) and it
+    isn't a PhD/Master's-only posting. Returns None otherwise.
     """
 
-    matched_users = find_matching_users(role_type)
-
-    if not matched_users:
+    if not is_target_role(role_type) or is_grad_only(title):
         return None
-
-    match_score = len(matched_users)
 
     save_alert(
         company,
         title,
         location,
-        matched_users,
-        match_score,
+        application_url=application_url,
         db_path=db_path
     )
 
-    return {
-        "matched_users": matched_users,
-        "match_score": match_score
-    }
-
-
-if __name__ == "__main__":
-
-    result = upsert_internship(
-        "Scale AI",
-        "AI Platform Engineering Intern",
-        "San Francisco CA",
-        "ML",
-        "https://scale.com/careers",
-        source_platform="legacy"
-    )
-
-    print(result)
-
-    if result["is_new"]:
-
-        alert = create_alert_for_new_internship(
-            "Scale AI",
-            "AI Platform Engineering Intern",
-            "San Francisco CA",
-            "ML"
-        )
-
-        print(alert)
+    return {"role_type": role_type}

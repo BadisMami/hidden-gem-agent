@@ -32,23 +32,11 @@ def create_database(db_path=DB_PATH):
 
     cursor = conn.cursor()
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS companies (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        company TEXT,
-        industry TEXT,
-        career_url TEXT
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        major TEXT,
-        interests TEXT
-    )
-    """)
+    # Leftovers from the old CSV-seeded multi-user setup. Companies now
+    # live in data/company_registry.csv and target roles in
+    # role_classifier.TARGET_ROLES.
+    cursor.execute("DROP TABLE IF EXISTS companies")
+    cursor.execute("DROP TABLE IF EXISTS users")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS internships (
@@ -74,14 +62,15 @@ def create_database(db_path=DB_PATH):
         company TEXT,
         title TEXT,
         location TEXT,
-        matched_users TEXT,
-        match_score INTEGER
+        application_url TEXT,
+        sms_sent INTEGER NOT NULL DEFAULT 0
     )
     """)
 
     conn.commit()
 
     _migrate_internships_table(conn, cursor)
+    _migrate_alerts_table(conn, cursor)
 
     conn.commit()
     conn.close()
@@ -164,6 +153,26 @@ def _migrate_internships_table(conn, cursor):
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_internships_dedup_key "
         "ON internships(dedup_key)"
     )
+
+    conn.commit()
+
+
+def _migrate_alerts_table(conn, cursor):
+    """
+    Add application_url/sms_sent to an older alerts table. Existing rows
+    default to sms_sent=1 - they were already texted under the old
+    send-immediately behavior and must not be re-sent.
+    """
+
+    existing_columns = _column_names(cursor, "alerts")
+
+    if "application_url" not in existing_columns:
+        cursor.execute("ALTER TABLE alerts ADD COLUMN application_url TEXT")
+
+    if "sms_sent" not in existing_columns:
+        cursor.execute(
+            "ALTER TABLE alerts ADD COLUMN sms_sent INTEGER NOT NULL DEFAULT 1"
+        )
 
     conn.commit()
 
