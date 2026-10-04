@@ -7,6 +7,10 @@ from company_monitors.greenhouse_monitor import get_greenhouse_internships
 from company_monitors.jibe_monitor import get_jibe_internships
 from company_monitors.eightfold_monitor import get_eightfold_internships
 from company_monitors.oracle_orc_monitor import get_oracle_orc_internships
+from company_monitors.workday_monitor import get_workday_internships
+from company_monitors.successfactors_monitor import get_successfactors_internships
+from company_monitors.adp_monitor import get_adp_internships
+from company_monitors.taleo_monitor import get_taleo_internships
 from company_monitors.generic_browser_monitor import get_browser_scraped_internships
 from database_setup import create_database
 from database_monitor import upsert_internship, create_alert_for_new_internship
@@ -55,6 +59,41 @@ def _oracle_orc_adapter(company):
     )
 
 
+def _workday_adapter(company):
+
+    host, tenant, site = company["platform_identifier"].split("|")
+
+    return get_workday_internships(company["company"], host, tenant, site)
+
+
+def _taleo_adapter(company):
+
+    host, career_section, portal_id = (
+        company["platform_identifier"].split("|")
+    )
+
+    return get_taleo_internships(
+        company["company"], host, career_section, portal_id
+    )
+
+
+def _make_adp_adapter(browser):
+
+    def adapter(company):
+
+        site_name, client_id = company["platform_identifier"].split("|")
+
+        return get_adp_internships(
+            company["company"], site_name, client_id, browser
+        )
+
+    return adapter
+
+
+# Platforms that need the shared headless browser.
+BROWSER_PLATFORMS = {"custom", "adp"}
+
+
 def _make_custom_adapter(browser):
     """
     "custom" platform companies have no known structured API. Falls back
@@ -94,14 +133,21 @@ def _build_platform_adapters(browser):
         ),
         "eightfold": _eightfold_adapter,
         "oracle_orc": _oracle_orc_adapter,
+        "workday": _workday_adapter,
+        "successfactors": lambda company: get_successfactors_internships(
+            company["company"],
+            company["platform_identifier"]
+        ),
+        "taleo": _taleo_adapter,
+        "adp": _make_adp_adapter(browser),
         "custom": _make_custom_adapter(browser),
     }
 
 
 def run_monitor(skip_custom=False):
     """
-    skip_custom=True (--fast) skips platform="custom" companies (the
-    ones needing the slow headless-browser scraper) without importing
+    skip_custom=True (--fast) skips every company that needs the slow
+    headless browser (BROWSER_PLATFORMS) without importing
     Playwright. Handy for a quick local check; the scheduled workflow
     always does a full run.
     """
@@ -111,7 +157,10 @@ def run_monitor(skip_custom=False):
     companies = load_enabled_companies()
 
     if skip_custom:
-        companies = [c for c in companies if c.get("platform") != "custom"]
+        companies = [
+            c for c in companies
+            if c.get("platform") not in BROWSER_PLATFORMS
+        ]
 
     summary = {
         "companies_checked": len(companies),
@@ -128,7 +177,7 @@ def run_monitor(skip_custom=False):
     }
 
     needs_browser = any(
-        c.get("platform") == "custom" for c in companies
+        c.get("platform") in BROWSER_PLATFORMS for c in companies
     )
 
     if needs_browser:
@@ -345,10 +394,9 @@ if __name__ == "__main__":
         "--fast",
         action="store_true",
         help=(
-            "Skip platform=custom companies (the slow, headless-browser "
-            "ones). Only checks companies with a verified structured API "
-            "(greenhouse/jibe/eightfold/oracle_orc). Fast enough to run "
-            "every few minutes; doesn't require Playwright/Chromium."
+            "Skip companies that need the headless browser (custom and "
+            "adp platforms). Only checks companies with a structured API; "
+            "doesn't require Playwright/Chromium."
         ),
     )
     args = parser.parse_args()

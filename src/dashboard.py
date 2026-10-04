@@ -4,7 +4,7 @@ import pandas as pd
 
 from company_registry_loader import COMPANY_REGISTRY_PATH
 from database_setup import DB_PATH
-from role_classifier import TARGET_ROLES, is_grad_only
+from role_classifier import TARGET_ROLES, is_ineligible
 
 # Allowlist for load_table - never build SQL from unvalidated input.
 ALLOWED_TABLES = {"internships", "alerts"}
@@ -129,7 +129,7 @@ with tab1:
 
         internships = internships[
             internships["role_type"].isin(TARGET_ROLES)
-            & ~internships["title"].apply(is_grad_only)
+            & ~internships["title"].apply(is_ineligible)
         ]
 
     if search_term:

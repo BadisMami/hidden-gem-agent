@@ -25,7 +25,7 @@ Best Buy,Retail,Medium,SWE|ML|Data|Cybersecurity,custom,https://jobs.bestbuy.com
 McKesson,Healthcare Distribution,Medium,SWE|Cybersecurity|Data,custom,https://careers.mckesson.com/en/early-talent,,yes
 Cigna,Health Insurance,Medium,SWE|Data,custom,https://jobs.thecignagroup.com/us/en/technology-development-program,,yes
 Liberty Mutual,Insurance,Medium,SWE|Data|Cybersecurity,custom,https://jobs.libertymutualgroup.com/careers/undergraduate-internships/,,yes
-USAA,Insurance/Finance,Medium,SWE|Data|Cybersecurity,custom,https://www.usaajobs.com/careers,,yes
+USAA,Insurance/Finance,Medium,SWE|Data|Cybersecurity,workday,https://usaa.wd1.myworkdayjobs.com/USAAJOBSWD,usaa.wd1.myworkdayjobs.com|usaa|USAAJOBSWD,yes
 MassMutual,Insurance/Finance,Medium,SWE|Data,custom,https://careers.massmutual.com/students,,yes
 Northwestern Mutual,Insurance/Finance,Medium,SWE|Data,custom,https://careers.northwesternmutual.com/teams/internships/,,yes
 Truist,Banking,Medium,SWE|Data|Cybersecurity,custom,https://careers.truist.com/us/en/early-career-listings-2026,,yes
@@ -33,7 +33,7 @@ Charles Schwab,Finance,Medium,SWE|Data,custom,https://www.schwabjobs.com/interns
 Edward Jones,Finance,Medium,SWE,custom,https://www.edwardjones.com/us-en/about-us/careers,,yes
 Southwest Airlines,Airlines,Medium,SWE|Data,custom,https://careers.southwestair.com/us/en/programs,,yes
 FedEx,Logistics,Medium,SWE|Data,custom,https://careers.fedex.com/career-areas/student-programs/jobs,,yes
-Home Depot,Retail,Medium,SWE|Data|ML,custom,https://careers.homedepot.com/student-internships/,,yes
+Home Depot,Retail,Medium,SWE|Data|ML,workday,https://homedepot.wd5.myworkdayjobs.com/CareerDepot,homedepot.wd5.myworkdayjobs.com|homedepot|CareerDepot,yes
 Lowe's,Retail,Medium,SWE|Data,custom,https://talent.lowes.com/us/en/internships,,yes
 Dick's Sporting Goods,Retail,Medium,SWE|Cybersecurity|Data,custom,https://www.dickssportinggoods.jobs/students-grads/,,yes
 Kroger,Retail/Grocery,Medium,SWE|Data,custom,https://www.krogerfamilycareers.com/en/sites/CX_2001/pages/5015,,yes
@@ -47,20 +47,22 @@ Eaton,Manufacturing,Medium,SWE|Embedded|Data,eightfold,https://www.eaton.com/us/
 Mercury Insurance,Insurance,Medium,Data|SWE,custom,https://www.mercuryinsurance.com/about/careers-jobs/early-careers/internships.html,,yes
 PepsiCo,Consumer Goods,Medium,SWE|Data,custom,https://www.pepsicojobs.com/internshipsprograms/jobs,,yes
 Procter & Gamble,Consumer Goods,Medium,SWE|Data|ML,custom,https://www.pgcareers.com/global/en/internships,,yes
-Northrop Grumman,Defense,High,SWE|Cybersecurity|Data|Embedded,custom,https://www.northropgrumman.com/careers/internships-at-northrop-grumman,,yes
+Northrop Grumman,Defense,High,SWE|Cybersecurity|Data|Embedded,eightfold,https://jobs.northropgrumman.com/careers,jobs.northropgrumman.com|ngc.com,yes
 General Dynamics,Defense,High,SWE|Cybersecurity|Embedded,custom,https://www.gd.com/careers/interns,,yes
+General Dynamics IT,Defense,Medium,SWE|Data|Cybersecurity,workday,https://gdit.wd5.myworkdayjobs.com/External_Career_Site,gdit.wd5.myworkdayjobs.com|gdit|External_Career_Site,yes
 BAE Systems Inc,Defense,High,SWE|Cybersecurity|Embedded|Data,custom,https://jobs.baesystems.com/global/en/leap,,yes
-Huntington Ingalls Industries,Defense,High,SWE|Cybersecurity|Data,custom,https://www.hii.com/careers/students,,yes
-Leidos,Defense,Medium,SWE|ML|Data|Cybersecurity,custom,https://careers.leidos.com/pages/intern-jobs,,yes
-Booz Allen Hamilton,Defense,Medium,SWE|Data|Cybersecurity,custom,https://careers.boozallen.com/jobs/search,,yes
-SAIC,Defense,Medium,SWE|Data|Cybersecurity,custom,https://jobs.saic.com/pages/early-career,,yes
+Huntington Ingalls Industries,Defense,High,SWE|Cybersecurity|Data,successfactors,https://careers.huntingtoningalls.com/search/?q=intern,careers.huntingtoningalls.com,yes
+HII Mission Technologies,Defense,High,SWE|ML|Data|Cybersecurity,successfactors,https://jobs.hii-tsd.com/search/?q=intern,jobs.hii-tsd.com,yes
+Leidos,Defense,Medium,SWE|ML|Data|Cybersecurity,workday,https://leidos.wd5.myworkdayjobs.com/External,leidos.wd5.myworkdayjobs.com|leidos|External,yes
+Booz Allen Hamilton,Defense,Medium,SWE|Data|Cybersecurity,workday,https://bah.wd1.myworkdayjobs.com/BAH_Jobs,bah.wd1.myworkdayjobs.com|bah|BAH_Jobs,yes
+SAIC,Defense,Medium,SWE|Data|Cybersecurity,custom,https://jobs.saic.com/search/jobs?q=intern,,yes
 CACI International,Defense,Medium,SWE|Data|Cybersecurity,eightfold,https://careers.caci.com/global/en/early-career-internships,caci.eightfold.ai|caci.com,yes
-Textron Systems,Defense,Medium,SWE|Embedded|Robotics,custom,https://www.textronsystems.com/careers/student-candidates,,yes
+Textron Systems,Defense,Medium,SWE|Embedded|Robotics,taleo,https://textron.taleo.net/careersection/textron/jobsearch.ftl?lang=en&keyword=intern,textron.taleo.net|textron|8140753014,yes
 Leonardo DRS,Defense,Medium,SWE|Embedded|Firmware,custom,https://careers.leonardodrs.com/go/Internships/9729000/,,yes
-Kratos Defense,Defense,Medium,SWE|Cybersecurity|Embedded,custom,https://www.kratosdefense.com/careers/open-roles,,yes
-Mercury Systems,Defense,Medium,SWE|Embedded|Hardware,custom,https://www.mrcy.com/careers,,yes
-ManTech,Defense,Medium,SWE|Cybersecurity|Data,custom,https://www.mantech.com/internships,,yes
-Parsons Corporation,Defense,Medium,SWE|Data|Robotics,custom,https://jobs.parsons.com/internships,,yes
+Kratos Defense,Defense,Medium,SWE|Cybersecurity|Embedded,custom,https://kratosdefense.submit4jobs.com/,,yes
+Mercury Systems,Defense,Medium,SWE|Embedded|Firmware|Hardware,adp,https://myjobs.adp.com/mercurysystemscareers/cx/job-listing?c=1162151&d=ExternalCareerSite,mercurysystemscareers|1162151,yes
+ManTech,Defense,Medium,SWE|Cybersecurity|Data,custom,https://careers.mantech.com/en_US/careers/SearchJobs/intern?listFilterMode=1&jobRecordsPerPage=200,,yes
+Parsons Corporation,Defense,Medium,SWE|Data|Robotics,workday,https://parsons.wd5.myworkdayjobs.com/Search,parsons.wd5.myworkdayjobs.com|parsons|Search,yes
 Peraton,Defense,Medium,SWE|Cybersecurity|Data,custom,https://www.careers.peraton.com/students-early-career,,yes
-MITRE Corporation,Defense Research,Medium,SWE|ML|Data|Cybersecurity,custom,https://careers.mitre.org/us/en/student-programs,,yes
-Johns Hopkins Applied Physics Laboratory,Defense Research,Medium,SWE|ML|Data|Robotics,custom,https://www.jhuapl.edu/careers/internships,,yes
+MITRE Corporation,Defense Research,Medium,SWE|ML|Data|Cybersecurity,custom,https://careers.mitre.org/us/en/search-results?keywords=intern,,yes
+Johns Hopkins Applied Physics Laboratory,Defense Research,Medium,SWE|ML|Data|Robotics,jibe,https://careers.jhuapl.edu/internships,careers.jhuapl.edu,yes

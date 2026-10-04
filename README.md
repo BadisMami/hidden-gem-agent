@@ -15,9 +15,10 @@ data/company_registry.csv (which companies, which platform, enabled?)
         |
         v
 internship_monitor_service.py  --dispatches by platform-->  company_monitors/
-        |                                                    greenhouse_monitor.py
-        |                                                    jibe_monitor.py
-        |                                                    (lever/workday: planned)
+        |                                                    greenhouse, jibe, eightfold,
+        |                                                    oracle_orc, workday,
+        |                                                    successfactors, taleo, adp,
+        |                                                    generic_browser (custom)
         v
 database_monitor.py (dedup-aware upsert)
         |
@@ -29,8 +30,8 @@ database/internship_agent.db (SQLite - runtime source of truth)
 ```
 
 Company monitoring is registry-driven: `data/company_registry.csv` lists each
-company's `platform` (`greenhouse`, `jibe`, or `custom`) and, for Greenhouse
-and Jibe, `platform_identifier` (the board token, or the API host for Jibe).
+company's `platform` and its `platform_identifier` (format per platform below;
+`custom` companies use `career_url` instead).
 `internship_monitor_service.py`
 loads only `enabled=yes` rows, dispatches to the matching adapter, and
 inserts normalized internship records directly into SQLite via a
@@ -131,89 +132,50 @@ failing - the rest of the pipeline (DB alerts, dashboard) works either way.
 
 ## Supported platforms
 
-Structured, high-accuracy adapters (real title/location/apply-link fields
-from the platform's own API):
+Structured adapters (real title/location/apply-link fields from the
+platform's own API). `platform_identifier` format in parentheses:
 
-- **Greenhouse** — `get_greenhouse_internships(company_name, board_name)`.
-  Verified live against Hudl.
-- **Jibe / SAP SuccessFactors Recruiting Marketing** —
-  `get_jibe_internships(company_name, api_host)`. Verified live against
-  Garmin and State Farm. Exposes a genuine `tags3=Intern` server-side
-  filter, so detection is exact rather than keyword-guessed.
-- **Eightfold.ai** — `get_eightfold_internships(company_name, api_host,
-  company_domain)`. Verified live against John Deere and Eaton. Search is
-  keyword-only (no structured intern filter), so results are re-filtered
-  client-side with a word-boundary regex to drop false positives like
-  "Internal Auditor".
-- **Oracle Recruiting Cloud (Fusion HCM)** —
-  `get_oracle_orc_internships(company_name, career_site_host, tenant_host,
-  site_number, site_name)`. Verified live against Honeywell (30 real
-  internships). Same keyword-only caveat as Eightfold.
+- **Greenhouse** (`board_token`) - Hudl.
+- **Jibe** (`api_host`) - Garmin, State Farm, Johns Hopkins APL. Uses the
+  `tags3=Intern` facet, falling back to a keyword search for sites
+  without it (APL).
+- **Eightfold.ai** (`api_host|company_domain`) - John Deere, Lockheed
+  Martin, Eaton, CACI, Northrop Grumman (`jobs.northropgrumman.com|ngc.com`).
+- **Oracle Recruiting Cloud** (`career_site_host|tenant_host|site_number|site_name`)
+  - Honeywell.
+- **Workday** (`<tenant>.wd<N>.myworkdayjobs.com|tenant|site`) - Leidos,
+  Parsons, General Dynamics IT, Booz Allen, Home Depot, USAA. Find the
+  tenant/site in any job link on the company's careers site.
+- **SuccessFactors Career Site Builder** (`host`) - HII (shipbuilding and
+  Mission Technologies sites). Parses the server-rendered `/search/?q=intern`
+  page.
+- **Taleo** (`host|career_section|portal_id`) - Textron Systems. The
+  `portal` id is on the `rest/jobboard/searchjobs` request in the browser's
+  network tab.
+- **ADP Workforce Now** (`site_name|client_id`, needs the browser) -
+  Mercury Systems. ADP's API needs a session token, so the page is loaded
+  in the headless browser and its own API response is read.
+
+Every keyword-search adapter re-filters titles with a word-boundary
+`intern|internship|co-op` regex, so "Internal Auditor" / "International"
+results don't leak through.
 
 Best-effort fallback for everything else:
 
-- **`platform=custom`** (59 of the 65 registry companies) —
-  `company_monitors/generic_browser_monitor.py::get_browser_scraped_internships()`
-  uses a real headless browser (Playwright/Chromium) to render the career
-  page's JS, attempts a job-search-box submission if one exists, then
-  extracts links whose text contains "intern"/"internship" as a whole
-  word, isn't a generic nav label ("Internships", "Search Jobs", etc.),
-  and points at what looks like an actual job-detail URL (contains a
-  4+ digit id). This is what makes "any" custom career page possible to
-  monitor at all without hand-building an adapter per company - a plain
-  HTTP request can't see through most of these sites' JS rendering.
-
-  **Real result from a full run across all 65 registry companies
-  (2026-09-17): 24 of 59 `custom` companies produced real internship
-  data - 154 postings total** (Caterpillar: 20, Leonardo DRS: 17,
-  McKesson: 15, L3Harris: 15, RTX: 10, PepsiCo: 10, and 18 more with
-  smaller counts). Notably this succeeded for RTX and Caterpillar, both
-  "Phenom People"-platform sites where direct API reverse-engineering had
-  stalled earlier - the browser fallback found real postings anyway.
-  The other 35 `custom` companies returned 0 (either no search box was
-  found/triggered, the site blocks headless browsers, or they may simply
-  have no current internships posted).
-
-  **Known limitations of this fallback**: location is always "Unknown"
-  (link text alone doesn't reliably contain it); `application_url` quality
-  depends on whether the site's link href points at the specific posting
-  (usually does) vs. a search-results page; it can't handle career pages
-  needing more than one search-box interaction to reach real listings.
-
-- **Lever, Workday** — planned, no adapter built yet. None of the
-  registry's `platform=custom` companies were found on public Greenhouse
-  or Lever boards when checked (2026-09-17) - if a new company should be
-  added, check there before assuming it needs the generic scraper. (Note:
-  a couple of `platform=custom` companies - 3M, Duke Energy - turned out
-  to run Workday and work fine through the generic browser scraper
-  without a dedicated adapter; only build one if the generic scraper
-  can't handle a Workday site.)
+- **`custom`** - `generic_browser_monitor.py` loads `career_url` in headless
+  Chromium (including iframes), takes links whose text contains
+  "intern"/"internship" and whose URL has a 4+ digit job id, and if there
+  are none, tries the page's job-search box. Point `career_url` at the
+  site's intern search-results page when one exists (MITRE, SAIC, ManTech
+  do this) - landing pages often have no job links at all. Location is
+  always "Unknown".
 
 ## Limitations
 
 - Role classification (`src/role_classifier.py`) is deterministic
-  keyword matching, not ML-based — titles it hasn't seen may land in
-  `Other`.
-- Alert matching is by role category only (`TARGET_ROLES`) - postings
-  classified as `Other` (common for browser-scraped titles) never alert.
-- Custom company career-page monitoring is scrape-only and not yet
-  connected to the database pipeline.
-
-## Roadmap
-
-1. For each remaining `platform=custom` company, check whether its career
-   site is actually Workday, iCIMS-branded-standalone, or another platform
-   with a discoverable JSON API (open the site in a real browser and watch
-   the network tab for `/api/` or `myworkdayjobs.com` calls) before
-   assuming a scraper is the only option - Jibe was found this way.
-2. Generic Lever adapter (`company_monitors/lever_monitor.py` doesn't
-   exist yet - create it following the pattern of the other adapters in
-   that folder), verified against at least one real Lever-hosted company
-   before enabling more.
-3. Workday support (tenant-specific, deferred until Greenhouse/Lever are
-   stable).
-4. The generic browser scraper (`generic_browser_monitor.py`) covers 24
-   of 59 `custom` companies as of 2026-09-17 - investigate the remaining
-   35 individually (some are DNS/timeout failures worth retrying, others
-   need a different search-trigger approach or may genuinely block
-   headless browsers).
+  keyword matching - titles it hasn't seen land in `Other` and never
+  alert. Generic titles like "2027 Engineering Intern" are `Other`.
+- Some `custom` companies still return nothing (the site blocks headless
+  browsers or needs multi-step interaction). Check the network tab for a
+  Workday / Eightfold / Taleo / SuccessFactors API before trying anything
+  else - most "custom" sites turned out to be one of those.

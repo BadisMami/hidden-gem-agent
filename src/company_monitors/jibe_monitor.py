@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 from datetime import date
 
 import requests
@@ -8,6 +9,28 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from role_classifier import classify_role
 from url_utils import clean_url
+
+_INTERN_WORD_RE = re.compile(
+    r"\bintern(ship)?s?\b|\bco-?op\b", re.IGNORECASE
+)
+
+
+def _keyword_search_jobs(url, company_name):
+
+    try:
+        response = requests.get(
+            url,
+            params={"keywords": "intern", "page": 1, "limit": 100},
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10
+        )
+        response.raise_for_status()
+
+        return response.json().get("jobs", [])
+
+    except Exception as e:
+        print(f"Error fetching jobs for {company_name}: {e}")
+        return []
 
 
 def get_jibe_internships(company_name, api_host):
@@ -56,6 +79,14 @@ def get_jibe_internships(company_name, api_host):
 
     jobs = data.get("jobs", [])
 
+    # Not every Jibe site uses the tags3 "Intern" facet (e.g. Johns
+    # Hopkins APL doesn't) - when it matches nothing, fall back to a
+    # keyword search filtered on the title instead.
+    use_keyword_search = not jobs
+
+    if use_keyword_search:
+        jobs = _keyword_search_jobs(url, company_name)
+
     internships = []
     seen_job_ids = set()
 
@@ -63,9 +94,12 @@ def get_jibe_internships(company_name, api_host):
 
         fields = job.get("data", {}) or {}
 
-        tags3 = fields.get("tags3") or []
+        if use_keyword_search:
 
-        if "Intern" not in tags3:
+            if not _INTERN_WORD_RE.search(fields.get("title", "") or ""):
+                continue
+
+        elif "Intern" not in (fields.get("tags3") or []):
             continue
 
         title = fields.get("title", "") or ""

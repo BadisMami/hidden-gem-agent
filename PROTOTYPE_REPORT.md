@@ -2,7 +2,7 @@
 
 ## What it does
 
-The agent checks the career sites of 65 non-Big-Tech companies every 4 hours and texts me when a new **SWE, ML, Embedded or Robotics** internship posts. It skips PhD/Master's-only roles. The defense, aerospace and industrial companies it covers (Lockheed Martin, Garmin, John Deere, Honeywell, Target and others) are ones most internship trackers miss. It runs on GitHub Actions, so no computer needs to stay on.
+The agent checks the career sites of 67 non-Big-Tech companies every 4 hours and texts me when a new **SWE, ML, Embedded, Firmware, Robotics or Hardware/FPGA** internship posts. It skips PhD/Master's-only and SkillBridge roles, and doesn't re-text a role reposted within 14 days. The defense, aerospace and industrial companies it covers (Lockheed Martin, Garmin, John Deere, Honeywell, Target and others) are ones most internship trackers miss. It runs on GitHub Actions, so no computer needs to stay on.
 
 ## How to use it
 
@@ -29,6 +29,7 @@ The agent checks the career sites of 65 non-Big-Tech companies every 4 hours and
 | Coverage (Sep 17) | Adapters for 4 job platforms + browser fallback; grew from 23 to 65 companies | The companies I wanted don't use common job boards |
 | Automation (Sep 17) | SMS alerts + GitHub Actions scheduling | Get a text without running anything by hand |
 | Tailoring (Sep 24) | Only my roles, no PhD/Master's, one 4-hour schedule, removed unused resume code | Texts were arriving at random hours and for roles I don't want |
+| Defense coverage (Oct 4) | Hardware/FPGA roles added; Workday, SuccessFactors, Taleo and ADP adapters; iframe support | An FPGA internship was found but never texted, and Northrop, Leidos, Textron, Mercury etc. returned nothing |
 
 Key choices:
 - **Job APIs first, browser as a fallback.** APIs are exact; the browser works on almost any site.
@@ -37,8 +38,8 @@ Key choices:
 
 ## Testing
 
-- **Automated tests:** 90 tests, run with `venv\Scripts\python -m pytest`, covering role sorting, the PhD/Master's filter, deduplication, the texting-hours window, SMS batching and each job-platform adapter.
-- **Live testing:** each adapter was checked against a real company. Full runs across all 65 companies were done, and a real text was received on my phone.
+- **Automated tests:** 123 tests, run with `venv\Scripts\python -m pytest`, covering role sorting, the PhD/Master's filter, deduplication, the texting-hours window, SMS batching and each job-platform adapter.
+- **Live testing:** each adapter was checked against a real company. Full runs across all the companies were done, and a real text was received on my phone.
 
 Bugs testing caught and fixed:
 - **Data loss:** the database was wiped on every run. Fixed by saving new postings without rebuilding.
@@ -49,6 +50,6 @@ Bugs testing caught and fixed:
 
 ## Limitations and next steps
 
-- **Coverage gaps:** 24 of 65 companies return no data yet (their sites block or confuse the browser). Next step: Workday and iframe support.
+- **Coverage gaps:** some consumer/finance companies on the generic browser scraper still return no data. All the defense/embedded companies are now covered.
 - **Title-only filtering:** a grad-only requirement stated only in the job description still gets through.
 - **Late runs:** GitHub doesn't guarantee run times, so checks can be late or skipped.

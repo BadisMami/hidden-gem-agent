@@ -1,6 +1,6 @@
 import pytest
 
-from role_classifier import classify_role, is_grad_only
+from role_classifier import classify_role, is_grad_only, is_ineligible
 
 
 def test_swe_titles():
@@ -51,6 +51,34 @@ def test_short_keywords_need_word_boundary():
     # "rtl" inside "Portland", "asic" inside "Basic"
     assert classify_role("Finance Intern - Portland, OR") == "Other"
     assert classify_role("Basic Operations Intern") == "Other"
+
+
+@pytest.mark.parametrize("title, expected", [
+    ("2027 RF Engineering Intern", "Hardware"),
+    ("Radar Engineer Intern", "Hardware"),
+    ("2027 Internship - Missile Guidance, Navigation, & Control (GNC)",
+     "Robotics"),
+    ("2027 Internship - Cyber Physical Systems", "Embedded"),
+    ("Software Engineer/Data Scientist Intern", "SWE"),
+    ("Engineer/SW Developer/Analyst Intern", "SWE"),
+    ("Data Science Intern", "Data"),
+])
+def test_defense_title_keywords(title, expected):
+    assert classify_role(title) == expected
+
+
+@pytest.mark.parametrize("title", [
+    "DevOps Engineer (Skillbridge Intern) - 28114",
+    "SkillBridge RF Technician Internship for Service Members",
+    "AI Prompt Engineer High School Intern - Summer 2027",
+    "Current PhD, AI Engineering Internship Program",
+])
+def test_ineligible_titles(title):
+    assert is_ineligible(title) is True
+
+
+def test_regular_internship_is_eligible():
+    assert is_ineligible("2027 Firmware Engineering Co-Op") is False
 
 
 def test_autonomous_systems_is_robotics():

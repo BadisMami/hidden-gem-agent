@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 
 from database_setup import DB_PATH, _compute_dedup_key
-from role_classifier import is_target_role, is_grad_only
+from role_classifier import is_target_role, is_ineligible
 from database_alerts import save_alert, was_recently_texted
 
 
@@ -99,11 +99,12 @@ def create_alert_for_new_internship(
     """
     Create an alert for a newly discovered internship if its role_type is
     one of my target roles (see role_classifier.TARGET_ROLES), it isn't
-    a PhD/Master's-only posting, and I wasn't already texted about the
-    same company + title recently (a repost). Returns None otherwise.
+    a grad-only or non-college posting (role_classifier.is_ineligible),
+    and I wasn't already texted about the same company + title recently
+    (a repost). Returns None otherwise.
     """
 
-    if not is_target_role(role_type) or is_grad_only(title):
+    if not is_target_role(role_type) or is_ineligible(title):
         return None
 
     if was_recently_texted(company, title, db_path=db_path):

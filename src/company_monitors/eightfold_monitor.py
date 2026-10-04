@@ -36,7 +36,7 @@ def get_eightfold_internships(company_name, api_host, company_domain):
 
     start = 0
     page_size = 10
-    max_pages = 10  # safety cap - Eightfold has no larger page-size param
+    max_pages = 30  # safety cap - Eightfold has no larger page-size param
 
     while start < page_size * max_pages:
 

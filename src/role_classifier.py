@@ -26,6 +26,9 @@ ROLE_KEYWORDS = [
         "autonomous",
         "mechatronics",
         "unmanned",
+        "guidance navigation",
+        "inertial navigation",
+        "gnc",
     ]),
     ("ML", [
         "machine learning",
@@ -38,18 +41,14 @@ ROLE_KEYWORDS = [
         "nlp",
         "ml engineer",
         "ml research",
-    ]),
-    ("Data", [
-        "data science",
-        "data scientist",
-        "data engineering",
-        "data engineer",
-        "data analytics",
-        "data analyst",
+        "ai/ml",
+        "ai-ml",
     ]),
     ("Embedded", [
         "embedded",
         "rtos",
+        "cyber physical",
+        "cyber-physical",
     ]),
     ("Firmware", [
         "firmware",
@@ -68,6 +67,12 @@ ROLE_KEYWORDS = [
         "chip design",
         "electrical engineer",
         "computer engineer",
+        "rf engineer",
+        "radar",
+        "microwave",
+        "signal processing",
+        "dsp",
+        "avionics",
     ]),
     ("SWE", [
         "software engineer",
@@ -84,9 +89,20 @@ ROLE_KEYWORDS = [
         "web developer",
         "application developer",
         "devops",
+        "computer scientist",
+        "sw developer",
+        "sw engineer",
         # Catch-all for titles like "Software/Network Engineering Intern"
         # or "Software Developer Intern" - keep it last.
         "software",
+    ]),
+    ("Data", [
+        "data science",
+        "data scientist",
+        "data engineering",
+        "data engineer",
+        "data analytics",
+        "data analyst",
     ]),
 ]
 
@@ -132,6 +148,20 @@ def is_grad_only(title):
         return False
 
     return bool(_GRAD_ONLY_RE.search(title)) and not _UNDERGRAD_RE.search(title)
+
+
+# Internship programs that aren't for college students at all: DoD
+# SkillBridge (transitioning service members) and high-school programs.
+_NOT_COLLEGE_RE = re.compile(r"\bskill\s?bridge\b|\bhigh school", re.IGNORECASE)
+
+
+def is_ineligible(title):
+    """True for postings I can't apply to: grad-only or non-college."""
+
+    if not title:
+        return False
+
+    return is_grad_only(title) or bool(_NOT_COLLEGE_RE.search(title))
 
 
 def classify_role(title):

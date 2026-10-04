@@ -137,6 +137,32 @@ def test_network_failure_returns_empty_list(monkeypatch):
     assert results == []
 
 
+def test_keyword_fallback_when_site_has_no_intern_tag(monkeypatch):
+    """Sites like Johns Hopkins APL don't use the tags3 facet at all."""
+
+    keyword_results = {"jobs": [
+        {"data": {"req_id": "1",
+                  "title": "2027 Internship - Software Engineer",
+                  "full_location": "Laurel, Maryland"}},
+        {"data": {"req_id": "2",
+                  "title": "Internal Communications Lead",
+                  "full_location": "Laurel, Maryland"}},
+    ]}
+
+    def fake_get(url, params, headers, timeout):
+        if "tags3" in params:
+            return FakeResponse({"jobs": []})
+        return FakeResponse(keyword_results)
+
+    monkeypatch.setattr(jibe_monitor.requests, "get", fake_get)
+
+    results = jibe_monitor.get_jibe_internships("APL", "careers.jhuapl.edu")
+
+    assert [r["title"] for r in results] == [
+        "2027 Internship - Software Engineer"
+    ]
+
+
 def test_no_internships_returns_empty_list(monkeypatch):
 
     monkeypatch.setattr(

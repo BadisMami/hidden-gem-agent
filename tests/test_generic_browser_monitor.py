@@ -163,7 +163,7 @@ def test_search_attempted_when_no_initial_results(monkeypatch):
 
     def fake_extract(page):
         calls["extract_calls"] += 1
-        if calls["extract_calls"] == 1:
+        if not calls["search_called"]:
             return []
         return [
             (
@@ -183,3 +183,39 @@ def test_search_attempted_when_no_initial_results(monkeypatch):
     assert calls["search_called"] is True
     assert len(results) == 1
     assert results[0]["title"] == "Data Science Intern"
+
+
+def test_slow_page_rechecked_before_searching(monkeypatch):
+    """Jobs that render late (e.g. in an iframe) are found by the second
+    look, without running the search flow."""
+
+    class FakePage:
+
+        def wait_for_timeout(self, ms):
+            pass
+
+    calls = {"search_called": False, "extract_calls": 0}
+
+    def fake_search(page):
+        calls["search_called"] = True
+        return True
+
+    def fake_extract(page):
+        calls["extract_calls"] += 1
+        if calls["extract_calls"] == 1:
+            return []
+        return [(
+            "Software Internship 2027",
+            "https://acme.submit4jobs.com/#/jobDescription/370159/job"
+        )]
+
+    monkeypatch.setattr(gbm, "_goto_with_retries", lambda *a, **k: None)
+    monkeypatch.setattr(gbm, "_try_search_for_interns", fake_search)
+    monkeypatch.setattr(gbm, "_extract_links", fake_extract)
+
+    results = gbm._scrape_company_page(
+        FakePage(), "Acme", "https://acme.submit4jobs.com/"
+    )
+
+    assert calls["search_called"] is False
+    assert [r["title"] for r in results] == ["Software Internship 2027"]

@@ -149,14 +149,27 @@ def _try_click_submit_button(page):
 
 
 def _extract_links(page):
+    """Links from the page and every iframe in it - some career pages
+    (e.g. Kratos's submit4jobs listing) render their jobs in an iframe."""
 
-    raw = page.eval_on_selector_all(
-        "a",
-        "els => els.map(e => ({text: e.textContent.trim(), href: e.href}))"
-        ".filter(l => l.text.length > 0 && l.href)"
-    )
+    links = []
 
-    return [(item["text"], item["href"]) for item in raw]
+    for frame in page.frames:
+
+        try:
+            raw = frame.eval_on_selector_all(
+                "a",
+                "els => els.map(e => ({text: e.textContent.trim(), "
+                "href: e.href})).filter(l => l.text.length > 0 && l.href)"
+            )
+
+        except Exception:
+            # Frames can detach mid-read on pages that keep navigating.
+            continue
+
+        links.extend((item["text"], item["href"]) for item in raw)
+
+    return links
 
 
 def _internships_from_links(links, company_name):
@@ -205,6 +218,15 @@ def _scrape_company_page(page, company_name, career_url):
     # internship-jobs/... page), and running the search-box flow on a
     # page like that can navigate away and lose results that were
     # already there, rather than add to them.
+    internships = _internships_from_links(_extract_links(page), company_name)
+
+    if internships:
+        return internships
+
+    # Slow job widgets (e.g. iframe-embedded listings) often haven't
+    # rendered after 3s - give the page one more look before searching.
+    page.wait_for_timeout(5000)
+
     internships = _internships_from_links(_extract_links(page), company_name)
 
     if internships:
