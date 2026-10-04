@@ -23,6 +23,9 @@ ROLE_KEYWORDS = [
         "robotics",
         "robot",
         "autonomy",
+        "autonomous",
+        "mechatronics",
+        "unmanned",
     ]),
     ("ML", [
         "machine learning",
@@ -46,6 +49,7 @@ ROLE_KEYWORDS = [
     ]),
     ("Embedded", [
         "embedded",
+        "rtos",
     ]),
     ("Firmware", [
         "firmware",
@@ -54,7 +58,16 @@ ROLE_KEYWORDS = [
         "hardware",
         "fpga",
         "asic",
-        "electrical engineering",
+        "rtl",
+        "verilog",
+        "vhdl",
+        "vlsi",
+        "digital design",
+        "microelectronics",
+        "semiconductor",
+        "chip design",
+        "electrical engineer",
+        "computer engineer",
     ]),
     ("SWE", [
         "software engineer",
@@ -71,13 +84,24 @@ ROLE_KEYWORDS = [
         "web developer",
         "application developer",
         "devops",
+        # Catch-all for titles like "Software/Network Engineering Intern"
+        # or "Software Developer Intern" - keep it last.
+        "software",
     ]),
+]
+
+# Keywords must start at a word boundary, so short ones like "rtl" and
+# "asic" don't fire inside "Portland" or "Basic". No trailing boundary,
+# so "robot" still matches "robotics".
+_ROLE_PATTERNS = [
+    (category, re.compile("|".join(r"\b" + re.escape(k) for k in keywords)))
+    for category, keywords in ROLE_KEYWORDS
 ]
 
 
 # The role categories I actually want texts for. Every internship is
 # still stored and classified, but only these trigger an alert.
-TARGET_ROLES = {"SWE", "ML", "Embedded", "Robotics"}
+TARGET_ROLES = {"SWE", "ML", "Embedded", "Firmware", "Robotics", "Hardware"}
 
 
 def is_target_role(role_type):
@@ -89,7 +113,8 @@ def is_target_role(role_type):
 # or "graduate" - those collide with "MS Office", "new grad", etc.
 _GRAD_ONLY_RE = re.compile(
     r"\bph\.?\s?d\b|\bdoctoral\b|\bdoctorate\b|\bpost-?doc|"
-    r"\bmaster'?s\b|\bmasters\b|\bmaster of\b|\bmba\b|\bgraduate student",
+    r"\bmaster'?s\b|\bmasters\b|\bmaster of\b|\bmba\b|\bmsc\b|"
+    r"\bgraduate student|\bgraduate research",
     re.IGNORECASE
 )
 
@@ -122,12 +147,10 @@ def classify_role(title):
 
     normalized = re.sub(r"\s+", " ", title).strip().lower()
 
-    for category, keywords in ROLE_KEYWORDS:
+    for category, pattern in _ROLE_PATTERNS:
 
-        for keyword in keywords:
+        if pattern.search(normalized):
 
-            if keyword in normalized:
-
-                return category
+            return category
 
     return "Other"

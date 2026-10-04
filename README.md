@@ -4,8 +4,8 @@ An agent that automatically discovers technical internships at recognizable
 **non-Big-Tech** companies — Target, Chipotle, Progressive, State Farm, John
 Deere, Garmin, Hudl, and similar "hidden gem" employers that CS/CE students
 don't usually think to check. It's tailored to one person (me): only
-SWE, ML, Embedded, and Robotics internships trigger a text. It is a discovery and alerting tool, not an
-application tracker: it does not track saved jobs, applied status, or
+SWE, ML, Embedded, Firmware, Robotics, and Hardware/FPGA internships trigger a
+text. It is a discovery and alerting tool, not an application tracker: it does not track saved jobs, applied status, or
 interview history.
 
 ## Architecture
@@ -36,9 +36,11 @@ loads only `enabled=yes` rows, dispatches to the matching adapter, and
 inserts normalized internship records directly into SQLite via a
 dedup-aware `upsert_internship()` — re-running the monitor never creates
 duplicate rows, and alerts are only generated the first time a job is seen.
+A repost of a role I was already texted about (same company + title) in the
+last 14 days doesn't text again.
 
 Every posting is stored and classified by `role_classifier.py`, but only
-roles in `TARGET_ROLES` (`SWE`, `ML`, `Embedded`, `Robotics`, defined in
+roles in `TARGET_ROLES` (`SWE`, `ML`, `Embedded`, `Firmware`, `Robotics`, `Hardware`, defined in
 `src/role_classifier.py`) create an alert and a text. Edit that set to
 change what you get texted about.
 

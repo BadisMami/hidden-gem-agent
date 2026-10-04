@@ -2,7 +2,7 @@ What this is
 
 Most internship trackers on GitHub just list openings at the usual FAANG+ companies. This one is different: it's a curated list of 65 companies chosen around my interests (embedded systems, ML, software/aerospace engineering). Some are the expected defense/aerospace names — Honeywell, Garmin, Lockheed Martin. Others are companies you'd never guess run tech internship programs at all — Target, Chipotle, Alo, Progressive.
 
-A bot checks all 65 automatically and texts me when something new and relevant posts - only SWE, ML, embedded, and robotics roles, and never PhD/Master's-only ones.
+A bot checks all 65 automatically and texts me when something new and relevant posts - only SWE, ML, embedded/firmware, robotics, and hardware/FPGA roles, and never PhD/Master's-only ones.
 
 How it works
 

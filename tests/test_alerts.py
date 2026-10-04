@@ -21,7 +21,9 @@ def test_db():
     os.remove(path)
 
 
-@pytest.mark.parametrize("role_type", ["SWE", "ML", "Embedded", "Robotics"])
+@pytest.mark.parametrize(
+    "role_type", ["SWE", "ML", "Embedded", "Firmware", "Robotics", "Hardware"]
+)
 def test_alert_created_for_target_role(test_db, role_type):
 
     alert = database_monitor.create_alert_for_new_internship(
@@ -39,7 +41,7 @@ def test_alert_created_for_target_role(test_db, role_type):
 
 @pytest.mark.parametrize(
     "role_type",
-    ["Cybersecurity", "Firmware", "Hardware", "Data", "Product", "Other"]
+    ["Cybersecurity", "Data", "Product", "Other"]
 )
 def test_no_alert_for_non_target_role(test_db, role_type):
 
@@ -152,3 +154,33 @@ def test_migration_marks_existing_alerts_as_already_sent():
 
     finally:
         os.remove(path)
+
+
+def test_repost_of_recently_texted_role_does_not_alert_again(test_db):
+
+    import database_alerts
+
+    database_monitor.create_alert_for_new_internship(
+        "Acme", "SWE Intern", "Remote", "SWE", db_path=test_db
+    )
+
+    # A same-run duplicate (e.g. another location) is still queued, so
+    # both links go out grouped in one text.
+    assert database_monitor.create_alert_for_new_internship(
+        "Acme", "SWE Intern", "Austin", "SWE", db_path=test_db
+    ) is not None
+
+    pending = database_alerts.get_unsent_alerts(db_path=test_db)
+    database_alerts.mark_alerts_sent(
+        [a["id"] for a in pending], db_path=test_db
+    )
+
+    # Reposted under a new req id a few days later: no second text.
+    assert database_monitor.create_alert_for_new_internship(
+        "Acme", "SWE Intern", "Remote", "SWE", db_path=test_db
+    ) is None
+
+    # A different role at the same company still alerts.
+    assert database_monitor.create_alert_for_new_internship(
+        "Acme", "FPGA Intern", "Remote", "Hardware", db_path=test_db
+    ) is not None

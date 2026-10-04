@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from database_setup import DB_PATH
 
@@ -44,6 +44,34 @@ def save_alert(
     print(
         f"Alert saved: {company}"
     )
+
+
+def was_recently_texted(company, title, days=14, db_path=DB_PATH):
+    """
+    True if I was already texted about this company + title in the last
+    `days` days. Companies often repost the same role under a new req id
+    (or one per location), which would otherwise text me again.
+    Unsent alerts don't count, so same-run duplicates still go out
+    together, grouped into one entry in the text.
+    """
+
+    cutoff = str(datetime.now() - timedelta(days=days))
+
+    conn = sqlite3.connect(db_path)
+
+    row = conn.execute(
+        """
+        SELECT 1 FROM alerts
+        WHERE company = ? AND title = ? AND sms_sent = 1
+          AND timestamp >= ?
+        LIMIT 1
+        """,
+        (company, title, cutoff)
+    ).fetchone()
+
+    conn.close()
+
+    return row is not None
 
 
 def get_unsent_alerts(db_path=DB_PATH):

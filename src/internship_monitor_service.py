@@ -100,15 +100,10 @@ def _build_platform_adapters(browser):
 
 def run_monitor(skip_custom=False):
     """
-    skip_custom=True skips platform="custom" companies entirely (the ones
-    needing the slow headless-browser scraper), without even importing
-    Playwright. Intended for a frequent, lightweight scheduled run (e.g.
-    every 15 minutes) that only re-checks the fast, structured-API
-    companies (greenhouse/jibe/eightfold/oracle_orc) - pair with a
-    separate, much less frequent full run (skip_custom=False) that also
-    covers the "custom" companies, since scraping ~60 sites with a real
-    browser takes minutes, not seconds, and doesn't need to happen nearly
-    as often to still catch new postings.
+    skip_custom=True (--fast) skips platform="custom" companies (the
+    ones needing the slow headless-browser scraper) without importing
+    Playwright. Handy for a quick local check; the scheduled workflow
+    always does a full run.
     """
 
     create_database()

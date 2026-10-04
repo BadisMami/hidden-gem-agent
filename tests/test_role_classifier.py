@@ -30,6 +30,33 @@ def test_fpga_classified_as_hardware():
     assert classify_role("FPGA Intern") == "Hardware"
 
 
+@pytest.mark.parametrize("title", [
+    "FPGA Intern Engineer",
+    "Digital Design Electrical Engineer Intern (Summer 2027)(Onsite)",
+    "RTL Design Intern",
+    "ASIC Verification Intern",
+    "Electrical Engineering Intern (Summer 2027)",
+    "Computer Engineering Intern",
+])
+def test_hardware_titles(title):
+    assert classify_role(title) == "Hardware"
+
+
+def test_software_catch_all():
+    assert classify_role("Software/Network Engineering Intern") == "SWE"
+    assert classify_role("Software Developer Intern") == "SWE"
+
+
+def test_short_keywords_need_word_boundary():
+    # "rtl" inside "Portland", "asic" inside "Basic"
+    assert classify_role("Finance Intern - Portland, OR") == "Other"
+    assert classify_role("Basic Operations Intern") == "Other"
+
+
+def test_autonomous_systems_is_robotics():
+    assert classify_role("Autonomous Systems Intern") == "Robotics"
+
+
 def test_robotics_beats_swe():
     assert classify_role("Robotics Software Intern") == "Robotics"
 
@@ -60,6 +87,8 @@ def test_cybersecurity_title():
     "MBA Intern, Finance Leadership Development Program",
     "Doctoral Research Intern",
     "Graduate Student Embedded Intern",
+    "Boeing Graduate Researcher Program, Software Engineering AI Intern",
+    "Research & Development Summer Internship (MSc) 2027",
 ])
 def test_grad_only_titles_detected(title):
     assert is_grad_only(title) is True
